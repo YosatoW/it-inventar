@@ -14,7 +14,7 @@ func executeCommand() {
 	case "2":
 		handleRemoveItem()
 	case "3":
-		handleEditItem()
+		handleChangeQuantity()
 	case "4":
 		handleChanceArticleInformation()
 	case "5":

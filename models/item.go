@@ -148,6 +148,15 @@ const FileSupplier = "supplier.csv"
 
 var items []Item
 
+// AddItem adds the passed Item to the Inventory
+func AddItem(newItem Item) error {
+	// Add to item Repository
+	items = append(items, newItem)
+
+	// Update data in file
+	return updateDataInFile()
+}
+
 // Initialize does the initialization of the repository
 func Initialize() error {
 	var err error
@@ -163,15 +172,6 @@ func GetAllItems() []Item {
 	allItems := make([]Item, len(items))
 	copy(allItems, items)
 	return allItems
-}
-
-// AddItem adds the passed Item to the Inventory
-func AddItem(newItem Item) error {
-	// Add to item Repository
-	items = append(items, newItem)
-
-	// Update data in file
-	return updateDataInFile()
 }
 
 // GetItemById retrieves an item by its index
