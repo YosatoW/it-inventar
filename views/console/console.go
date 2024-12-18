@@ -12,12 +12,12 @@ import (
 
 const ExitStatusCodeNoError int = 0
 
-// ShowMenu shows the menu to the console
-func ShowMenu() {
+// ShowExecuteCommandMenu shows the menu to the console
+func ShowExecuteCommandMenu() {
 	fmt.Println(`
 	###########################################
-	#******* WELCOME TO OUR LIBRARY ***********
-	#******* CHOOSE YOUR OPTION BELOW *********
+	#******** WELCOME TO OUR INVENTORY ********
+	#******** CHOOSE YOUR OPTION BELOW ********
 	# 1. Artikel hinzufügen
 	# 2. Artikel löschen
 	# 3. Artikel bearbeiten
@@ -27,7 +27,26 @@ func ShowMenu() {
 	# 9. Lagerbestand anzeigen
 	#
 	# c. CLEAR VIEW AND SHOW MENU
-	# q. TERMINATE BOOK LIBRARY APP
+	# q. EXIT INVENTORY APP
+	`)
+}
+
+// ShowHiddenCommandMenu shows the hidden-menu to the console
+func ShowHiddenCommandMenu() {
+	fmt.Println(`
+	###########################################
+	#****************  SERVICE *****************
+	#******** CHOOSE YOUR OPTION BELOW *********
+	# 1. neuen Lieferant hinzufügen
+	# 2. neuen Status hinzufügen
+	# 3. neue Kategorie hinzufügen
+	#
+	# 11. Lieferant anzeigen
+	# 12. Status anzeigen
+	# 13. Kategorie anzeigen
+	#
+	#
+	# c. SHOW MAIN MENU
 	`)
 }
 
@@ -68,44 +87,6 @@ func ShowAllItems(items []models.Item, startIndex int) {
 			maxQuantityLen, item.Quantity, maxNoteLen, item.Note)
 	}
 }
-
-//// ShowAllItems shows all the available books in the library to the console
-//func ShowAllItems(items []models.Item) {
-//	// Berechnung der maximalen Länge für jede Spalte
-//	maxNameLen := len("Artikelbezeichnung")
-//	maxModelLen := len("Artikelnummer")
-//	maxQuantityLen := len("Menge")
-//	maxNoteLen := len("Notizen")
-//
-//	// Durchlaufen der Items, um die maximale Länge für jede Spalte zu finden
-//	for _, item := range items {
-//		if len(item.Name) > maxNameLen {
-//			maxNameLen = len(item.Name)
-//		}
-//		if len(item.Model) > maxModelLen {
-//			maxModelLen = len(item.Model)
-//		}
-//		if len(fmt.Sprintf("%d", item.Quantity)) > maxQuantityLen {
-//			maxQuantityLen = len(fmt.Sprintf("%d", item.Quantity))
-//		}
-//		if len(item.Note) > maxNoteLen {
-//			maxNoteLen = len(item.Note)
-//		}
-//	}
-//
-//	// Kopfzeile mit dynamisch berechneten Spaltenbreiten anzeigen
-//	fmt.Printf("%5s | %-*s | %-*s | %-*s | %-*s |\n",
-//		"ID", maxNameLen, "Artikelbezeichnung", maxModelLen, "Artikelnummer",
-//		maxQuantityLen, "Menge", maxNoteLen, "Notizen")
-//	fmt.Println(strings.Repeat("-", maxNameLen+maxModelLen+maxQuantityLen+maxNoteLen+22)) // Dynamische Trennlinie
-//
-//	// Artikel anzeigen
-//	for index, item := range items {
-//		fmt.Printf("%5d | %-*s | %-*s | %-*d | %-*s |\n",
-//			index+1, maxNameLen, item.Name, maxModelLen, item.Model,
-//			maxQuantityLen, item.Quantity, maxNoteLen, item.Note)
-//	}
-//}
 
 // AskForInput reads from console until line break is available and returns input
 func AskForInput() string {
@@ -172,50 +153,7 @@ func ShowMassageData(message string) {
 	fmt.Println(message, "darf nicht leer sein. Bitte versuchen sie es erneut.")
 }
 
-/*// Eingabefunktionen für die Artikeldaten
-func AskForName() string {
-	for {
-		ShowMessage("* Artikelbezeichnung:")
-		name := AskForInput()
-		if name != "" {
-			return name
-		} else {
-			ShowMassageData("Artikelbezeichnung")
-		}
-	}
-}
-
-func AskForType() string {
-	for {
-		ShowMessage("* Artikelnummer")
-		itemType := AskForInput()
-		if itemType != "" {
-			return itemType
-		} else {
-			ShowMassageData("Artikelnummer")
-		}
-	}
-}
-
-func AskForQuantity() int {
-	for {
-		ShowMessage("* Menge:")
-		quantityInput := AskForInput()
-		quantity := models.StringToInt(quantityInput) // Annahme: models.StringToInt() existiert und ist zugänglich
-		if quantity > 0 {
-			return quantity
-		} else {
-			ShowMassageData("Menge muss eine positive Zahl sein. Bitte versuchen Sie es erneut.")
-		}
-	}
-}
-
-func AskForNotes() string {
-	ShowMessage("Notizen (optional):")
-	return AskForInput()
-}
-*/
-
+/*
 // AskForName allows input for the item name, with an optional previous value if editing
 func AskForName(defaultValue string, isEditing bool) string {
 	for {
@@ -235,19 +173,19 @@ func AskForName(defaultValue string, isEditing bool) string {
 	}
 }
 
-// AskForType allows input for the item type, with an optional previous value if editing
-func AskForType(defaultValue string, isEditing bool) string {
+// AskForModel allows input for the item model, with an optional previous value if editing
+func AskForModel(defaultValue string, isEditing bool) string {
 	for {
 		if isEditing {
 			ShowMessage(fmt.Sprintf("* Artikelnummer [eingegeben: %s]:", defaultValue))
 		} else {
 			ShowMessage("* Artikelnummer:")
 		}
-		itemType := AskForInput()
-		if itemType == "" && defaultValue != "" {
+		itemModel := AskForInput()
+		if itemModel == "" && defaultValue != "" {
 			return defaultValue // Verwende den alten Wert, wenn nichts eingegeben wurde
-		} else if itemType != "" {
-			return itemType // Verwende den neuen eingegebenen Wert
+		} else if itemModel != "" {
+			return itemModel // Verwende den neuen eingegebenen Wert
 		} else {
 			ShowMessage("⚠️ Artikelnummer darf nicht leer sein.")
 		}
@@ -297,4 +235,198 @@ func AskForNotes(defaultValue string, isEditing bool) string {
 
 	// Ansonsten verwenden wir die neue Eingabe
 	return note
+}
+*/
+
+/* // Angepasste version von oben
+// ShowMessageData displays an error message indicating that a field cannot be empty.
+func ShowMessageData(fieldName string) {
+	fmt.Printf("%s darf nicht leer sein. Bitte versuchen Sie es erneut.\n", fieldName)
+}
+
+// AskForName allows input for the item name, with an optional previous value if editing
+func AskForName(defaultValue string, isEditing bool) string {
+	return askForInput("Artikelbezeichnung", defaultValue, isEditing, func(input string) bool {
+		return input != ""
+	})
+}
+
+// AskForModel allows input for the item model, with an optional previous value if editing
+func AskForModel(defaultValue string, isEditing bool) string {
+	return askForInput("Artikelnummer", defaultValue, isEditing, func(input string) bool {
+		return input != ""
+	})
+}
+
+// AskForQuantity allows input for the item quantity, with an optional previous value if editing
+func AskForQuantity(defaultValue int, isEditing bool) int {
+	for {
+		prompt := "Menge"
+		if isEditing && defaultValue > 0 {
+			ShowMessage(fmt.Sprintf("* %s [eingegeben: %d]:", prompt, defaultValue))
+		} else {
+			ShowMessage(fmt.Sprintf("* %s:", prompt))
+		}
+
+		quantityInput := AskForInput()
+		if quantityInput == "" && defaultValue > 0 {
+			return defaultValue // Verwende den alten Wert, wenn nichts eingegeben wurde
+		}
+
+		if strings.TrimSpace(quantityInput) == "" {
+			ShowMessageData(prompt)
+			continue
+		}
+
+		quantity := models.StringToInt(quantityInput)
+		if quantity > 0 {
+			return quantity
+		} else {
+			ShowMessage("⚠️ Menge muss eine positive Zahl sein. Bitte versuchen Sie es erneut.")
+		}
+	}
+}
+
+// AskForNotes allows input for optional notes, with an optional previous value if editing
+func AskForNotes(defaultValue string, isEditing bool) string {
+	if isEditing && defaultValue != "" {
+		ShowMessage(fmt.Sprintf("Eingegeben: (%s)\n\"Enter\" übernehmen, \"Leertaste\" löschen\n * Notizen:", defaultValue))
+	} else {
+		ShowMessage("* Notizen (optional):")
+	}
+
+	note := AskForInput()
+	if strings.TrimSpace(note) == "" {
+		return "" // Leert das Feld, wenn nur Leerzeichen eingegeben wurden
+	} else if note == "" && defaultValue != "" {
+		return defaultValue // Verwende den alten Wert, wenn nichts eingegeben wurde
+	}
+	return note // Verwende die neue Eingabe
+}
+
+// askForInput is a generic input handler for common input logic with validation.
+func askForInput(fieldName string, defaultValue string, isEditing bool, validate func(string) bool) string {
+	for {
+		if isEditing {
+			ShowMessage(fmt.Sprintf("* %s [Eingegeben: %s]:", fieldName, defaultValue))
+		} else {
+			ShowMessage(fmt.Sprintf("* %s:", fieldName))
+		}
+
+		input := AskForInput()
+		if input == "" && defaultValue != "" {
+			return defaultValue // Verwende den alten Wert, wenn nichts eingegeben wurde
+		} else if validate(input) {
+			return input // Verwende die neue Eingabe, wenn sie gültig ist
+		} else {
+			ShowMessageData(fieldName)
+		}
+	}
+}
+*/
+
+// ShowMessageData displays an error message indicating that a field cannot be empty.
+func ShowMessageData(fieldName string) {
+	fmt.Printf("%s darf nicht leer sein. Bitte versuchen Sie es erneut.\n", fieldName)
+}
+
+// AskForName allows input for the item name, with an optional previous value if editing
+func AskForName(defaultValue string, isEditing bool) string {
+	return askForInput("Artikelbezeichnung", defaultValue, isEditing, func(input string) bool {
+		return input != ""
+	})
+}
+
+// AskForModel allows input for the item model, with an optional previous value if editing
+func AskForModel(defaultValue string, isEditing bool) string {
+	return askForInput("Artikelnummer", defaultValue, isEditing, func(input string) bool {
+		return input != ""
+	})
+}
+
+// AskForQuantity allows input for the item quantity, with an optional previous value if editing
+func AskForQuantity(defaultValue int, isEditing bool) int {
+	for {
+		prompt := "Menge"
+		if isEditing && defaultValue > 0 {
+			ShowMessage(fmt.Sprintf("* %s [eingegeben: %d]:", prompt, defaultValue))
+		} else {
+			ShowMessage(fmt.Sprintf("* %s:", prompt))
+		}
+
+		quantityInput := AskForInput()
+		if quantityInput == "" && defaultValue > 0 {
+			return defaultValue // Verwende den alten Wert, wenn nichts eingegeben wurde
+		}
+
+		if strings.TrimSpace(quantityInput) == "" {
+			ShowMessageData(prompt)
+			continue
+		}
+
+		quantity := models.StringToInt(quantityInput)
+		if quantity > 0 {
+			return quantity
+		} else {
+			ShowMessage("⚠️ Menge muss eine positive Zahl sein. Bitte versuchen Sie es erneut.")
+		}
+	}
+}
+
+// AskForNotes allows input for optional notes, with an optional previous value if editing
+func AskForNotes(defaultValue string, isEditing bool) string {
+	if isEditing && defaultValue != "" {
+		ShowMessage(fmt.Sprintf("Eingegeben: (%s)\n\"Enter\" übernehmen, \"Leertaste\" löschen\n * Notizen:", defaultValue))
+	} else {
+		ShowMessage("* Notizen (optional):")
+	}
+
+	note := AskForInput()
+	if strings.TrimSpace(note) == "" {
+		return "" // Leert das Feld, wenn nur Leerzeichen eingegeben wurden
+	} else if note == "" && defaultValue != "" {
+		return defaultValue // Verwende den alten Wert, wenn nichts eingegeben wurde
+	}
+	return note // Verwende die neue Eingabe
+}
+
+// AskForSupplier allows input for the supplier, with an optional previous value if editing
+func AskForSupplier(defaultValue string, isEditing bool) string {
+	return askForInput("Lieferant", defaultValue, isEditing, func(input string) bool {
+		return input != ""
+	})
+}
+
+// AskForStatus allows input for the status, with an optional previous value if editing
+func AskForStatus(defaultValue string, isEditing bool) string {
+	return askForInput("Status", defaultValue, isEditing, func(input string) bool {
+		return input != ""
+	})
+}
+
+// AskForCategory allows input for the category, with an optional previous value if editing
+func AskForCategory(defaultValue string, isEditing bool) string {
+	return askForInput("Kategorie", defaultValue, isEditing, func(input string) bool {
+		return input != ""
+	})
+}
+
+// askForInput is a generic input handler for common input logic with validation.
+func askForInput(fieldName string, defaultValue string, isEditing bool, validate func(string) bool) string {
+	for {
+		if isEditing {
+			ShowMessage(fmt.Sprintf("* %s [Eingegeben: %s]:", fieldName, defaultValue))
+		} else {
+			ShowMessage(fmt.Sprintf("* %s:", fieldName))
+		}
+
+		input := AskForInput()
+		if input == "" && defaultValue != "" {
+			return defaultValue // Verwende den alten Wert, wenn nichts eingegeben wurde
+		} else if validate(input) {
+			return input // Verwende die neue Eingabe, wenn sie gültig ist
+		} else {
+			ShowMessageData(fieldName)
+		}
+	}
 }

@@ -1,15 +1,16 @@
+// Einfache Hilfsfunktionen
+
 package models
 
 import (
 	"encoding/csv"
+	"errors"
 	"fmt"
 	"os"
 	"reflect"
 	"strconv"
 	"strings"
 )
-
-const FileName = "data.csv"
 
 // Item as type
 type Item struct {
@@ -19,19 +20,18 @@ type Item struct {
 	Note     string
 }
 
-// Liste der Items, die mit der Item-Struktur arbeitet
-var items []Item
-
-// Initialize does the initialization of the repository
-func Initialize() error {
-	var err error
-	items, err = getDataFromFile()
-	if err != nil {
-		return err
-	}
-	return nil
+func StringToInt(info string) int {
+	value, _ := strconv.Atoi(strings.TrimSpace(info))
+	return value
 }
 
+func IntToString(value int) string {
+	return strconv.Itoa(value)
+}
+
+// file_handler
+//
+// enthält Funktionen zum Lesen und Schreiben in die CSV-Datei.
 func getDataFromFile() ([]Item, error) {
 	file, err := os.Open(FileName)
 	if err != nil {
@@ -59,6 +59,31 @@ func getDataFromFile() ([]Item, error) {
 	return readItems, nil
 }
 
+func updateDataInFile() error {
+	file, err := os.Create(FileName)
+	if err != nil {
+		return err
+	}
+	writer := csv.NewWriter(file)
+
+	for _, item := range items {
+		itemRecord := getItemAsStringSlice(item)
+		err := writer.Write(itemRecord)
+		if err != nil {
+			_ = file.Close()
+			return err
+		}
+	}
+
+	writer.Flush()
+	err = file.Close()
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
 // ParseItemFromCsvStringList verarbeitet eine CSV-Zeile und erstellt ein Item
 func ParseItemFromCsvStringList(record []string) (Item, error) {
 	parsedItem := Item{}
@@ -81,6 +106,56 @@ func ParseItemFromCsvStringList(record []string) (Item, error) {
 	}
 
 	return parsedItem, nil
+}
+
+func getItemAsStringSlice(item Item) []string {
+	bookSerialized := []string{
+		item.Name,
+		item.Model,
+		IntToString(item.Quantity),
+		item.Note,
+	}
+
+	return bookSerialized
+}
+
+// UpdateItem aktualisiert einen Artikel im Inventar
+func UpdateItem(id int, updatedItem Item) error {
+	if id < 0 || id >= len(items) {
+		return errors.New("ungültige ID")
+	}
+
+	items[id] = updatedItem
+	return updateDataInFile()
+}
+
+//
+//
+// file_handler //
+//
+//
+
+//
+//
+// item_repository
+//
+//
+// Verwaltung der Items (CRUD-Operationen) und die Dateioperationen.
+
+const FileName = "data.csv"
+const FileCategories = "categories.csv"
+const FileSupplier = "supplier.csv"
+
+var items []Item
+
+// Initialize does the initialization of the repository
+func Initialize() error {
+	var err error
+	items, err = getDataFromFile()
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 // GetAllItems returns a copy of all items
@@ -113,22 +188,16 @@ func RemoveItem(rowId int) error {
 	if rowId < 1 {
 		fmt.Printf("row Id %d in wrong data range, value must >= 1", rowId)
 	}
-
-	// Remove book from repository
-
 	// Temporary slice variable
 	var tempItems []Item
-
 	// Normalize rot ID
 	rowIdNormed := rowId - 1
-
 	//loop through existing slice and add all item except the removing one
 	for index, value := range items {
 		if index != rowIdNormed {
 			tempItems = append(tempItems, value)
 		}
 	}
-
 	// Assign temporary slice to existing package slice variable
 	items = tempItems
 
@@ -137,47 +206,8 @@ func RemoveItem(rowId int) error {
 	return err
 }
 
-func updateDataInFile() error {
-	file, err := os.Create(FileName)
-	if err != nil {
-		return err
-	}
-	writer := csv.NewWriter(file)
-
-	for _, item := range items {
-		itemRecord := getItemAsStringSlice(item)
-		err := writer.Write(itemRecord)
-		if err != nil {
-			_ = file.Close()
-			return err
-		}
-	}
-
-	writer.Flush()
-	err = file.Close()
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func getItemAsStringSlice(item Item) []string {
-	bookSerialized := []string{
-		item.Name,
-		item.Model,
-		IntToString(item.Quantity),
-		item.Note,
-	}
-
-	return bookSerialized
-}
-
-func StringToInt(info string) int {
-	value, _ := strconv.Atoi(strings.TrimSpace(info))
-	return value
-}
-
-func IntToString(value int) string {
-	return strconv.Itoa(value)
-}
+//
+//
+// item_repository //
+//
+//
