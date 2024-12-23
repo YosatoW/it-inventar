@@ -9,8 +9,7 @@ import (
 
 // Run does the running of the console application
 func Run() {
-	err := models.Initialize()
-	checkAndHandleError(err)
+	checkAndHandleError(models.Initialize())
 
 	console.Clear()
 	console.ShowExecuteCommandMenu()
@@ -179,7 +178,6 @@ func handleRemoveItem() {
 }
 
 // Case 03
-// handleChangeQuantity bearbeitet einen Artikel im Inventar
 // handleChangeQuantity bearbeitet einen Artikel im Inventar
 func handleChangeQuantity() {
 	console.Clear()
