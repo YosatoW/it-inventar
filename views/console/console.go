@@ -10,7 +10,11 @@ import (
 	"strings"
 )
 
-const ExitStatusCodeNoError int = 0
+const (
+	ExitStatusCodeNoError int = 0
+	// ItemDetailsMessage or the output of article information.
+	ItemDetailsMessage = "Artikel: %s (%s) - %d Stück - Notizen: %s"
+)
 
 // ShowAllItems shows all the available books in the library to the console
 func ShowAllItems(items []models.Item, startIndex int) {
@@ -106,6 +110,10 @@ func ShowMessage(message string) {
 	fmt.Println(message)
 }
 
+func ConfirmTheArticle(item models.Item) string {
+	return fmt.Sprintf(ItemDetailsMessage, item.Name, item.Model, item.Quantity, item.Note)
+}
+
 // InputC Displays the main menu and returns to it.
 func InputC() bool {
 	Clear()
@@ -133,6 +141,63 @@ func ChecksInventory() bool {
 		return true
 	}
 	return false
+}
+
+func HandleChancelAction() bool {
+	ShowMessage("❌ Artikel wurde nicht geändert.")
+	ShowContinue()
+	Clear()
+	return true
+}
+
+// PageIndexCalculate Calculates the start and end index for a page navigation, limited to the total number of elements.
+func PageIndexCalculate(page, pageSize, totalItems int) (int, int) {
+	start := page * pageSize
+	end := start + pageSize
+	if end > totalItems {
+		end = totalItems
+	}
+	return start, end
+}
+
+// PageIndexPrompt Shows the prompt for editing, scrolling or canceling
+func PageIndexPrompt() string {
+	ShowMessage("Gib die ID des zu bearbeitenden Artikels ein, drücke [Enter] für nächste seite oder [c], um zum Hauptmenü zurückzukehren.")
+	return AskForInput()
+}
+
+// PageIndexUserInput Processes the user input for editing, scrolling or canceling
+func PageIndexUserInput(choice string, page *int, end int, items []models.Item) (bool, *models.Item, int) {
+	if strings.ToLower(choice) == "c" {
+		Clear()
+		ShowExecuteCommandMenu()
+		return true, nil, 0
+	} else if strings.ToLower(choice) == "" {
+		// Continue to the next page
+		(*page)++
+		if end == len(items) {
+			InputPageEnd()
+			return true, nil, 0
+		}
+	} else {
+		// Check whether the input is a valid ID
+		rowId := models.StringToInt(choice)
+		if rowId <= 0 || rowId > len(items) {
+			ShowMessage("❌ Ungültige ID. Bitte gib eine gültige ID ein.")
+			ShowContinue()
+			return false, nil, 0
+		}
+
+		// Check whether the article exists and display
+		item := models.GetItemById(rowId - 1) // The index is adjusted correctly here
+		if item == nil {
+			ShowMessage("❌ Artikel mit dieser ID existiert nicht.")
+			ShowContinue()
+			return false, nil, 0
+		}
+		return false, item, rowId
+	}
+	return false, nil, 0
 }
 
 // ShowMessageData displays an error message indicating that a field cannot be empty.

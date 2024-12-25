@@ -7,10 +7,17 @@ import (
 	"strings"
 )
 
+const (
+	InitialPage = 0
+	pageSize    = 20
+
+	messageInvalidInput         = "Ungültige Eingabe!"
+	messageInvalidInputTryAgain = "Bitte wählen:\n[y] Ändern\n[n] abbrechen."
+)
+
 // Run does the running of the console application
 func Run() {
 	checkAndHandleError(models.Initialize())
-
 	console.Clear()
 	console.ShowExecuteCommandMenu()
 
@@ -19,6 +26,7 @@ func Run() {
 	}
 }
 
+// checkAndHandleError Checks whether there is an error and displays it if present. Used for centralized error handling.
 func checkAndHandleError(err error) {
 	if err != nil {
 		console.ShowError(err)
@@ -89,89 +97,51 @@ func handleAddItem() {
 // handleRemoveItem Handles the removal of an item from the inventory.
 func handleRemoveItem() {
 	console.Clear()
-	items := models.GetAllItems() // Hole alle Artikel aus dem Inventar
+	items := models.GetAllItems() // Get all items from the inventory
 
-	// Überprüft Inventar auf Inhalt
-	if console.ChecksInventory() {
+	if console.ChecksInventory() { // Checks inventory for content
 		return
 	}
 
-	page := 0
-	pageSize := 20
+	page := InitialPage
 	for {
-		// Berechne den Indexbereich für die aktuelle Seite
-		start := page * pageSize
-		end := start + pageSize
-		if end > len(items) {
-			end = len(items)
-		}
+		start, end := console.PageIndexCalculate(page, pageSize, len(items))
 
-		// Zeige die Artikel der aktuellen Seite
 		console.ShowAllItems(items[start:end], start)
 
-		// Zeige die Eingabeaufforderung zum Löschen, Blättern oder Abbrechen
-		console.ShowMessage("Gib die ID des zu löschenden Artikels ein, drücke [Enter] für die nächste Seite oder [c], um zum Hauptmenü zurückzukehren.")
-		choice := console.AskForInput()
+		choice := console.PageIndexPrompt()
 
-		if strings.ToLower(choice) == "c" {
-			// Zurück ins Hauptmenü
-			console.Clear()
-			console.ShowExecuteCommandMenu()
+		exit, item, rowId := console.PageIndexUserInput(choice, &page, end, items)
+		if exit {
 			return
-		} else if strings.ToLower(choice) == "" {
-			// Weiter zur nächsten Seite
-			page++
-			if end == len(items) {
-				console.InputPageEnd()
-				return
-			}
-		} else {
-			// Prüfe, ob die Eingabe eine gültige ID ist
-			rowId := models.StringToInt(choice)
-			if rowId <= 0 || rowId > len(items) {
-				console.ShowMessage("❌ Ungültige ID. Bitte gib eine gültige ID ein.")
-				console.ShowContinue()
-				continue
-			}
+		}
+		if item != nil {
+			console.ShowMessage(fmt.Sprintf("%s\nDiesen Artikel löschen? (y/n)", console.ConfirmTheArticle(*item)))
 
-			// Überprüfen, ob der Artikel existiert und anzeigen
-			item := models.GetItemById(rowId - 1) // Hier wird der Index korrekt angepasst
-			if item == nil {
-				console.ShowMessage("❌ Artikel mit dieser ID existiert nicht.")
-				console.ShowContinue()
-				continue
-			}
+			for {
+				choice = console.AskForInput()
 
-			// Bestätigung zum Löschen des Artikels
-			console.ShowMessage(fmt.Sprintf("Artikel: %s (%s) - %d Stück - Notizen: %s", item.Name, item.Model, item.Quantity, item.Note))
-			console.ShowMessage("Möchten Sie diesen Artikel wirklich löschen? (y/n) oder [c], um zum Hauptmenü zurückzukehren.")
-
-			choice = console.AskForInput()
-
-			if strings.ToLower(choice) == "y" {
-				// Artikel löschen
-				err := models.RemoveItem(rowId)
-				if err != nil {
-					console.ShowError(err)
+				if strings.ToLower(choice) == "y" {
+					err := models.RemoveItem(rowId)
+					if err != nil {
+						console.ShowError(err)
+					} else {
+						console.ShowMessage("✅ Artikel erfolgreich entfernt!")
+						console.ShowContinue()
+						console.Clear()
+						console.ShowExecuteCommandMenu()
+						return
+					}
+				} else if strings.ToLower(choice) == "n" {
+					console.HandleChancelAction()
+					break
 				} else {
-					console.ShowMessage("✅ Artikel erfolgreich entfernt!")
-					console.ShowContinue()
+					// Ungültige Eingabe, erneut fragen
 					console.Clear()
-					console.ShowExecuteCommandMenu()
-					return
+					console.ShowMessage(messageInvalidInput)
+					console.ShowMessage(fmt.Sprintf("Artikel: %s (%s) - %d Stück - Notizen: %s", item.Name, item.Model, item.Quantity, item.Note))
+					console.ShowMessage(messageInvalidInputTryAgain)
 				}
-			} else if strings.ToLower(choice) == "n" {
-				// Artikel nicht löschen, Abbruch
-				console.ShowMessage("❌ Artikel wurde nicht gelöscht.")
-				console.ShowContinue()
-				console.Clear()
-				break
-			} else if strings.ToLower(choice) == "c" {
-				console.InputC()
-				return
-			} else {
-				// Ungültige Eingabe, erneut fragen
-				console.ShowMessage(fmt.Sprintf("Ungültige Eingabe. Bitte wählen:\n[y] zum Löschen\n[n] zum Behalten\n[c] um zum Hauptmenü zurückzukehren.\n"))
 			}
 		}
 	}
@@ -181,113 +151,82 @@ func handleRemoveItem() {
 // handleChangeQuantity bearbeitet einen Artikel im Inventar
 func handleChangeQuantity() {
 	console.Clear()
-	items := models.GetAllItems() // Hole alle Artikel aus dem Inventar
+	items := models.GetAllItems()
 
 	if console.ChecksInventory() {
 		return
 	}
 
-	page := 0
-	pageSize := 20
+	page := InitialPage
 	for {
-		// Berechne den Indexbereich für die aktuelle Seite
-		start := page * pageSize
-		end := start + pageSize
-		if end > len(items) {
-			end = len(items)
-		}
+		start, end := console.PageIndexCalculate(page, pageSize, len(items))
 
-		// Zeige die Artikel der aktuellen Seite
 		console.ShowAllItems(items[start:end], start)
 
-		// Zeige die Eingabeaufforderung zum Bearbeiten, Blättern oder Abbrechen
-		console.ShowMessage("Gib die ID des zu bearbeitenden Artikels ein, drücke [Enter] für die nächste Seite oder [c], um zum Hauptmenü zurückzukehren.")
-		choice := console.AskForInput()
+		choice := console.PageIndexPrompt()
 
-		if strings.ToLower(choice) == "c" {
-			console.InputC()
+		exit, item, rowId := console.PageIndexUserInput(choice, &page, end, items)
+		if exit {
 			return
-		} else if strings.ToLower(choice) == "" {
-			page++
-			if end == len(items) {
-				console.InputPageEnd()
-				return
-			}
-		} else {
-			// Prüfe, ob die Eingabe eine gültige ID ist
-			rowId := models.StringToInt(choice)
-			if rowId <= 0 || rowId > len(items) {
-				console.ShowMessage("❌ Ungültige ID. Bitte gib eine gültige ID ein.")
-				console.ShowContinue()
-				continue
-			}
+		}
+		if item != nil {
+			console.ShowMessage(fmt.Sprintf("%s\nDie Mende diesen Artikel anpassen?(y/n)", console.ConfirmTheArticle(*item)))
 
-			// Überprüfen, ob der Artikel existiert und anzeigen
-			item := models.GetItemById(rowId - 1) // Hier wird der Index korrekt angepasst
-			if item == nil {
-				console.ShowMessage("❌ Artikel mit dieser ID existiert nicht.")
-				console.ShowContinue()
-				continue
-			}
+			for {
+				choice = console.AskForInput()
+				if strings.ToLower(choice) == "y" {
+					// Frage nach Einbuchen oder Abbuchen
+					console.ShowMessage(fmt.Sprintf("[1] Einbuchen\n[2] Ausbuchen"))
+					operation := console.AskForInput()
 
-			// Zeige aktuelle Artikelinformationen und frage nach neuen Werten
-			console.ShowMessage(fmt.Sprintf("Aktuelle Informationen für Artikel: %s (%s) - %d Stück - Notizen: %s", item.Name, item.Model, item.Quantity, item.Note))
-			console.ShowMessage("Möchten Sie die Menge dieses Artikels ändern? (y/n) oder [c], um zum Hauptmenü zurückzukehren")
-
-			choice = console.AskForInput()
-			if strings.ToLower(choice) == "y" {
-				// Frage nach Einbuchen oder Abbuchen
-				console.ShowMessage(fmt.Sprintf("[1] Einbuchen\n[2] Ausbuchen"))
-				operation := console.AskForInput()
-
-				if strings.ToLower(operation) == "1" {
-					// Frage nach der Menge zum Einbuchen
-					console.ShowMessage(fmt.Sprintf("Aktuelle Bestand: %d Stück", item.Quantity))
-					console.ShowMessage("Geben Sie die Menge ein, die eingebucht werden soll:")
-					quantityToAdd := console.AskForQuantity(0, false)
-					item.Quantity += quantityToAdd
-				} else if strings.ToLower(operation) == "2" {
-					// Frage nach der Menge zum Abbuchen
-					console.ShowMessage(fmt.Sprintf("Aktuelle Bestand: %d Stück", item.Quantity))
-					console.ShowMessage("Geben Sie die Menge ein, die abgebucht werden soll:")
-					quantityToSubtract := console.AskForQuantity(0, false)
-					if item.Quantity < quantityToSubtract {
-						console.ShowMessage("❌ Die abzubuchende Menge überschreitet die vorhandene Menge.")
+					if strings.ToLower(operation) == "1" {
+						// Frage nach der Menge zum Einbuchen
+						console.ShowMessage(fmt.Sprintf("Aktuelle Bestand: %d Stück", item.Quantity))
+						console.ShowMessage("Geben Sie die Menge ein, die eingebucht werden soll:")
+						quantityToAdd := console.AskForQuantity(0, false)
+						item.Quantity += quantityToAdd
+					} else if strings.ToLower(operation) == "2" {
+						// Frage nach der Menge zum Abbuchen
+						console.ShowMessage(fmt.Sprintf("Aktuelle Bestand: %d Stück", item.Quantity))
+						console.ShowMessage("Geben Sie die Menge ein, die abgebucht werden soll:")
+						quantityToSubtract := console.AskForQuantity(0, false)
+						if item.Quantity < quantityToSubtract {
+							console.ShowMessage("❌ Die abzubuchende Menge überschreitet die vorhandene Menge.")
+							console.ShowContinue()
+							continue
+						}
+						item.Quantity -= quantityToSubtract
+					} else {
+						console.ShowMessage("❌ Ungültige Auswahl. Bitte wählen Sie '1' oder '2'.")
 						console.ShowContinue()
 						continue
 					}
-					item.Quantity -= quantityToSubtract
-				} else {
-					console.ShowMessage("❌ Ungültige Auswahl. Bitte wählen Sie '1' oder '2'.")
-					console.ShowContinue()
-					continue
-				}
 
-				// Artikelmenge aktualisieren
-				err := models.UpdateItem(rowId-1, *item)
-				if err != nil {
-					console.ShowError(err)
+					// Artikelmenge aktualisieren
+					err := models.UpdateItem(rowId-1, *item)
+					if err != nil {
+						console.ShowError(err)
+					} else {
+						console.ShowMessage(fmt.Sprintf("Neue Bestand: %d Stück", item.Quantity))
+						console.ShowMessage("✅ Artikelmenge erfolgreich aktualisiert!")
+						console.ShowContinue()
+						console.Clear()
+						console.ShowExecuteCommandMenu()
+						return
+					}
+				} else if strings.ToLower(choice) == "n" {
+					console.HandleChancelAction()
+					break
+
 				} else {
-					console.ShowMessage(fmt.Sprintf("Neue Bestand: %d Stück", item.Quantity))
-					console.ShowMessage("✅ Artikelmenge erfolgreich aktualisiert!")
-					console.ShowContinue()
+					// Ungültige Eingabe, erneut fragen
 					console.Clear()
-					console.ShowExecuteCommandMenu()
-					return
+					console.ShowMessage(messageInvalidInput)
+					console.ShowMessage(fmt.Sprintf("Artikel: %s (%s) - %d Stück - Notizen: %s", item.Name, item.Model, item.Quantity, item.Note))
+					console.ShowMessage(messageInvalidInputTryAgain)
 				}
-			} else if strings.ToLower(choice) == "c" {
-				console.InputC()
-				return
-			} else if strings.ToLower(choice) == "n" {
-				// Artikel nicht ändern, Abbruch
-				console.ShowMessage("❌ Artikelmenge wurde nicht geändert.")
-				console.ShowContinue()
-				console.Clear()
-				break
-			} else {
-				// Ungültige Eingabe, erneut fragen
-				console.ShowMessage(fmt.Sprintf("Ungültige Eingabe. Bitte wählen:\n[y] zum Ändern\n[n] zum Behalten\n[c] um zum Hauptmenü zurückzukehren.\n"))
 			}
+
 		}
 	}
 }
@@ -296,62 +235,30 @@ func handleChangeQuantity() {
 // handleChanceArticleInformation bearbeitet einen Artikel im Inventar
 func handleChanceArticleInformation() {
 	console.Clear()
-	items := models.GetAllItems() // Hole alle Artikel aus dem Inventar
+	items := models.GetAllItems()
 
 	if console.ChecksInventory() {
 		return
 	}
 
-	page := 0
-	pageSize := 20
+	page := InitialPage
 	for {
 		var isEditing bool = false
 		var newName, newModel, newNotes string
 
-		// Berechne den Indexbereich für die aktuelle Seite
-		start := page * pageSize
-		end := start + pageSize
-		if end > len(items) {
-			end = len(items)
-		}
+		start, end := console.PageIndexCalculate(page, pageSize, len(items))
 
-		// Zeige die Artikel der aktuellen Seite
 		console.ShowAllItems(items[start:end], start)
 
-		// Zeige die Eingabeaufforderung zum Bearbeiten, Blättern oder Abbrechen
-		console.ShowMessage("Gib die ID des zu bearbeitenden Artikels ein, drücke [Enter] für die nächste Seite oder [c], um zum Hauptmenü zurückzukehren.")
-		choice := console.AskForInput()
+		choice := console.PageIndexPrompt()
 
-		if strings.ToLower(choice) == "c" {
-			console.InputC()
+		exit, item, rowId := console.PageIndexUserInput(choice, &page, end, items)
+		if exit {
 			return
-		} else if strings.ToLower(choice) == "" {
-			// Weiter zur nächsten Seite
-			page++
-			if end == len(items) {
-				console.InputPageEnd()
-				return
-			}
-		} else {
-			// Prüfe, ob die Eingabe eine gültige ID ist
-			rowId := models.StringToInt(choice)
-			if rowId <= 0 || rowId > len(items) {
-				console.ShowMessage("❌ Ungültige ID. Bitte gib eine gültige ID ein.")
-				console.ShowContinue()
-				continue
-			}
-
-			// Überprüfen, ob der Artikel existiert und anzeigen
-			item := models.GetItemById(rowId - 1) // Hier wird der Index korrekt angepasst
-			if item == nil {
-				console.ShowMessage("❌ Artikel mit dieser ID existiert nicht.")
-				console.ShowContinue()
-				continue
-			}
-
+		}
+		if item != nil {
 			// Zeige aktuelle Artikelinformationen und frage nach neuen Werten
-			console.ShowMessage(fmt.Sprintf("Aktuelle Informationen für Artikel: %s (%s) - %d Stück - Notizen: %s", item.Name, item.Model, item.Quantity, item.Note))
-			console.ShowMessage("Möchten Sie diesen Artikel wirklich bearbeiten? (y/n) oder [c], um zum Hauptmenü zurückzukehren")
+			console.ShowMessage(fmt.Sprintf("%s\nDiesen Artikel bearbeiten? (y/n)", console.ConfirmTheArticle(*item)))
 
 			choice = console.AskForInput()
 			if strings.ToLower(choice) == "y" {
@@ -367,47 +274,45 @@ func handleChanceArticleInformation() {
 				console.ShowMessage(fmt.Sprintf("Notizen: %s", newNotes))
 				console.ShowMessage("\nSind die Daten korrekt? (y/n) oder [c] um zum Hauptmenü zurückzukehren.")
 
-				choice = console.AskForInput()
+				for {
+					choice = console.AskForInput()
 
-				if strings.ToLower(choice) == "y" {
-					// Artikel aktualisieren
-					data := models.Item{
-						Name:     newName,
-						Model:    newModel,
-						Note:     newNotes,
-						Quantity: item.Quantity,
-					}
-					// Hier wird der Index korrekt angepasst
-					err := models.UpdateItem(rowId-1, data)
-					if err != nil {
-						console.ShowError(err)
-					} else {
-						console.ShowMessage("✅ Artikel erfolgreich aktualisiert!")
-						console.ShowContinue()
-						console.Clear()
-						console.ShowExecuteCommandMenu()
+					if strings.ToLower(choice) == "y" {
+						// Artikel aktualisieren
+						data := models.Item{
+							Name:     newName,
+							Model:    newModel,
+							Note:     newNotes,
+							Quantity: item.Quantity,
+						}
+						// Hier wird der Index korrekt angepasst
+						err := models.UpdateItem(rowId-1, data)
+						if err != nil {
+							console.ShowError(err)
+						} else {
+							console.ShowMessage("✅ Artikel erfolgreich aktualisiert!")
+							console.ShowContinue()
+							console.Clear()
+							console.ShowExecuteCommandMenu()
+							return
+						}
+					} else if strings.ToLower(choice) == "c" {
+						console.InputC()
 						return
+					} else if strings.ToLower(choice) == "n" {
+						console.HandleChancelAction()
+						break
+					} else {
+						console.Clear()
+						console.ShowMessage(messageInvalidInput)
+						console.ShowMessage("Für folgende Artikel:")
+						console.ShowMessage(fmt.Sprintf("%s (%s)\nAnzahl: %d Stück\nNotizen: %s", newName, newModel, item.Quantity, newNotes))
+						console.ShowMessage("---------------")
+						console.ShowMessage(messageInvalidInputTryAgain)
 					}
-				} else if strings.ToLower(choice) == "c" {
-					//Abbrechen und zurück zum Menü
-					console.InputC()
-					return
-				} else if strings.ToLower(choice) == "n" {
-					// Artikel nicht löschen, Abbruch
-					console.ShowMessage("❌ Artikel wird nicht bearbeitet.")
-					console.ShowContinue()
-					console.Clear()
-					break
-				} else if strings.ToLower(choice) == "c" {
-					console.ShowMessage("Vorgang abgebrochen")
-					console.Clear()
-					console.ShowExecuteCommandMenu()
-					return
-				} else {
-					// Ungültige Eingabe, erneut fragen
-					console.ShowMessage(fmt.Sprintf("Ungültige Eingabe. Bitte wählen:\n[y] zum Löschen\n[n] zum Behalten\n[c] um zum Hauptmenü zurückzukehren.\n"))
 				}
 			}
+
 		}
 	}
 }
@@ -416,35 +321,25 @@ func handleChanceArticleInformation() {
 // handleViewItems Displays all items in the inventory.
 func handleViewItems() {
 	console.Clear()
-	items := models.GetAllItems() // Entferne "err" und den zweiten Rückgabewert
+	items := models.GetAllItems()
 
 	if console.ChecksInventory() {
 		return
 	}
 
-	page := 0
-	pageSize := 20
+	page := InitialPage
 
 	for {
-		// Berechne den Indexbereich für die aktuelle Seite
-		start := page * pageSize
-		end := start + pageSize
-		if end > len(items) {
-			end = len(items)
-		}
+		start, end := console.PageIndexCalculate(page, pageSize, len(items))
 
-		// Zeige die Artikel der aktuellen Seite
 		console.ShowAllItems(items[start:end], start)
 
-		// Zeige die Eingabeaufforderung zum Weiterblättern oder Beenden
-		console.ShowMessage("Drücke [Enter], um mehr zu sehen oder [c], um zum Hauptmenü zurückzukehren.")
-		choice := console.AskForInput()
+		choice := console.PageIndexPrompt()
 
 		if choice == "c" {
 			console.InputC()
 			return
 		} else if choice == "" {
-			// Weiter zur nächsten Seite
 			page++
 			if end == len(items) {
 				console.InputPageEnd()
