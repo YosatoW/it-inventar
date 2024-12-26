@@ -19,21 +19,26 @@ const (
 // ShowAllItems shows all the available books in the library to the console
 func ShowAllItems(items []models.Item, startIndex int) {
 	// Berechnung der maximalen Länge für jede Spalte
-	maxNameLen := len("Artikelbezeichnung")
-	maxModelLen := len("Artikelnummer")
-	maxQuantityLen := len("Menge")
+	maxArticleNameLen := len("Artikelbezeichnung")
+	maxArticleNumberLen := len("Artikelnummer")
+	maxSupplierLen := len("Lieferant")
+	//maxManufacturerLen := len("Hersteller")
+	manQuantityLen := len("Menge [Stk]")
 	maxNoteLen := len("Notizen")
 
 	// Durchlaufen der Items, um die maximale Länge für jede Spalte zu finden
 	for _, item := range items {
-		if len(item.Name) > maxNameLen {
-			maxNameLen = len(item.Name)
+		if len(item.ArticleName) > maxArticleNameLen {
+			maxArticleNameLen = len(item.ArticleName)
 		}
-		if len(item.Model) > maxModelLen {
-			maxModelLen = len(item.Model)
+		if len(item.ArticleNumber) > maxArticleNumberLen {
+			maxArticleNumberLen = len(item.ArticleNumber)
 		}
-		if len(fmt.Sprintf("%d", item.Quantity)) > maxQuantityLen {
-			maxQuantityLen = len(fmt.Sprintf("%d", item.Quantity))
+		if len(item.Supplier) > maxSupplierLen {
+			maxSupplierLen = len(item.Supplier)
+		}
+		if len(fmt.Sprintf("%d", item.Quantity)) > manQuantityLen {
+			manQuantityLen = len(fmt.Sprintf("%d", item.Quantity))
 		}
 		if len(item.Note) > maxNoteLen {
 			maxNoteLen = len(item.Note)
@@ -41,16 +46,24 @@ func ShowAllItems(items []models.Item, startIndex int) {
 	}
 
 	// Kopfzeile mit dynamisch berechneten Spaltenbreiten anzeigen
-	fmt.Printf("%5s | %-*s | %-*s | %-*s | %-*s |\n",
-		"ID", maxNameLen, "Artikelbezeichnung", maxModelLen, "Artikelnummer",
-		maxQuantityLen, "Menge", maxNoteLen, "Notizen")
-	fmt.Println(strings.Repeat("-", maxNameLen+maxModelLen+maxQuantityLen+maxNoteLen+22)) // Dynamische Trennlinie
+	fmt.Printf("%5s | %-*s | %-*s | %-*s | %-*s | %-*s |\n",
+		"ID",
+		maxArticleNameLen, "Artikelbezeichnung",
+		maxArticleNumberLen, "Artikelnummer",
+		maxSupplierLen, "Lieferant",
+		manQuantityLen, "Menge [Stk]",
+		maxNoteLen, "Notizen")
+	fmt.Println(strings.Repeat("-", maxArticleNameLen+maxArticleNumberLen+maxSupplierLen+manQuantityLen+maxNoteLen+25)) // Dynamische Trennlinie
 
 	// Artikel anzeigen mit fortlaufender ID
 	for index, item := range items {
-		fmt.Printf("%5d | %-*s | %-*s | %-*d | %-*s |\n",
-			startIndex+index+1, maxNameLen, item.Name, maxModelLen, item.Model,
-			maxQuantityLen, item.Quantity, maxNoteLen, item.Note)
+		fmt.Printf("%5d | %-*s | %-*s | %-*s | %-*d | %-*s |\n",
+			startIndex+index+1,
+			maxArticleNameLen, item.ArticleName,
+			maxArticleNumberLen, item.ArticleNumber,
+			maxSupplierLen, item.Supplier,
+			manQuantityLen, item.Quantity,
+			maxNoteLen, item.Note)
 	}
 }
 
@@ -102,7 +115,7 @@ func ShutDownNormal() {
 
 // ShowAddItemInformation shows the information and format about adding a Item
 func ShowAddItemInformation() {
-	fmt.Println("Bitte geben Sie die Artikeldaten im folgenden Format ein:")
+	fmt.Println("Bitte geben Sie die Artikeldaten ein:")
 }
 
 // ShowMessage shows the message to the console
@@ -111,7 +124,7 @@ func ShowMessage(message string) {
 }
 
 func ConfirmTheArticle(item models.Item) string {
-	return fmt.Sprintf(ItemDetailsMessage, item.Name, item.Model, item.Quantity, item.Note)
+	return fmt.Sprintf(ItemDetailsMessage, item.ArticleName, item.ArticleNumber, item.Quantity, item.Note)
 }
 
 // InputC Displays the main menu and returns to it.
@@ -202,7 +215,7 @@ func PageIndexUserInput(choice string, page *int, end int, items []models.Item) 
 
 // ShowMessageData displays an error message indicating that a field cannot be empty.
 func ShowMessageData(fieldName string) {
-	fmt.Printf("%s darf nicht leer sein. Bitte versuchen Sie es erneut.\n", fieldName)
+	fmt.Printf("%s darf nicht leer sein.\n", fieldName)
 }
 
 // AskForName allows input for the item name, with an optional previous value if editing
@@ -212,8 +225,8 @@ func AskForName(defaultValue string, isEditing bool) string {
 	})
 }
 
-// AskForModel allows input for the item model, with an optional previous value if editing
-func AskForModel(defaultValue string, isEditing bool) string {
+// AskForArticleNumber allows input for the item model, with an optional previous value if editing
+func AskForArticleNumber(defaultValue string, isEditing bool) string {
 	return askForInput("Artikelnummer", defaultValue, isEditing, func(input string) bool {
 		return input != ""
 	})
@@ -223,14 +236,14 @@ func AskForModel(defaultValue string, isEditing bool) string {
 func AskForQuantity(defaultValue int, isEditing bool) int {
 	for {
 		prompt := "Menge"
-		if isEditing && defaultValue > 0 {
-			ShowMessage(fmt.Sprintf("* %s [eingegeben: %d]:", prompt, defaultValue))
+		if isEditing && defaultValue >= 0 {
+			ShowMessage(fmt.Sprintf("* %s [Eingegeben: %d]:", prompt, defaultValue))
 		} else {
 			ShowMessage(fmt.Sprintf("* %s:", prompt))
 		}
 
 		quantityInput := AskForInput()
-		if quantityInput == "" && defaultValue > 0 {
+		if quantityInput == "" && defaultValue >= 0 {
 			return defaultValue // Verwende den alten Wert, wenn nichts eingegeben wurde
 		}
 
@@ -240,7 +253,7 @@ func AskForQuantity(defaultValue int, isEditing bool) int {
 		}
 
 		quantity := models.StringToInt(quantityInput)
-		if quantity > 0 {
+		if quantity >= 0 {
 			return quantity
 		} else {
 			ShowMessage("⚠️ Menge muss eine positive Zahl sein. Bitte versuchen Sie es erneut.")
@@ -265,6 +278,13 @@ func AskForNotes(defaultValue string, isEditing bool) string {
 	return note // Verwende die neue Eingabe
 }
 
+// AskForStatus allows input for the item name, with an optional previous value if editing
+func AskForStatus(defaultValue string, isEditing bool) string {
+	return askForInput("Status", defaultValue, isEditing, func(input string) bool {
+		return input != ""
+	})
+}
+
 // AskForSupplier allows input for the supplier, with an optional previous value if editing
 func AskForSupplier(defaultValue string, isEditing bool) string {
 	return askForInput("Lieferant", defaultValue, isEditing, func(input string) bool {
@@ -272,9 +292,9 @@ func AskForSupplier(defaultValue string, isEditing bool) string {
 	})
 }
 
-// AskForStatus allows input for the status, with an optional previous value if editing
-func AskForStatus(defaultValue string, isEditing bool) string {
-	return askForInput("Status", defaultValue, isEditing, func(input string) bool {
+// AskForManufacturer allows input for the manufacturer, with an optional previous value if editing
+func AskForManufacturer(defaultValue string, isEditing bool) string {
+	return askForInput("Hersteller", defaultValue, isEditing, func(input string) bool {
 		return input != ""
 	})
 }

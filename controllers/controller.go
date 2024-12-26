@@ -12,7 +12,7 @@ const (
 	pageSize    = 20
 
 	messageInvalidInput         = "Ungültige Eingabe!"
-	messageInvalidInputTryAgain = "Bitte wählen:\n[y] Ändern\n[n] abbrechen."
+	messageInvalidInputTryAgain = "Bitte wählen:\n[y] Übernehmen\n[n] abbrechen."
 )
 
 // Run does the running of the console application
@@ -35,62 +35,71 @@ func checkAndHandleError(err error) {
 }
 
 // Case 01
-// handleAddItem Adds a new item to the inventory.
+// handleAddItem adds a new item to the inventory.
 func handleAddItem() {
 	console.Clear()
 	console.ShowAddItemInformation()
 
 	var isEditing bool = false
 	// Speicher der eingegebenen Werte für den Korrekturmodus
-	var name, itemModel, notes string
+	var articleName, articleNumber, manufacturer, notes string
 	var quantity int
+	var selectedSupplier models.Supplier
 
 	for {
 		// Die Eingabewerte werden jetzt nur einmal initialisiert und bei Korrekturen wiederverwendet
-		name = console.AskForName(name, isEditing)
-		itemModel = console.AskForModel(itemModel, isEditing)
+		articleName = console.AskForName(articleName, isEditing)
+		articleNumber = console.AskForArticleNumber(articleNumber, isEditing)
+		selectedSupplier = models.SelectSupplier()
+		//	manufacturer = console.AskForManufacturer(manufacturer, isEditing)
 		quantity = console.AskForQuantity(quantity, isEditing)
 		notes = console.AskForNotes(notes, isEditing)
 
-		// Benutzer überprüft die Eingaben
-		console.Clear()
-		console.ShowMessage("Bitte überprüfen Sie die eingegebenen Daten:")
-		console.ShowMessage(fmt.Sprintf("Artikelbezeichnung: %s", name))
-		console.ShowMessage(fmt.Sprintf("Artikelnummer: %s", itemModel))
-		console.ShowMessage(fmt.Sprintf("Menge: %d", quantity))
-		console.ShowMessage(fmt.Sprintf("Notizen: %s", notes))
-		console.ShowMessage("\nSind die Daten korrekt? (y/n) oder [c]  um zum Hauptmenü zurückzukehren.")
+		for {
+			// Benutzer überprüft die Eingaben
+			console.Clear()
+			console.ShowMessage("Bitte überprüfen Sie die eingegebenen Daten:")
+			console.ShowMessage(fmt.Sprintf("Artikelbezeichnung: %s", articleName))
+			console.ShowMessage(fmt.Sprintf("Artikelnummer: %s", articleNumber))
+			console.ShowMessage(fmt.Sprintf("Lieferant: %s", selectedSupplier.SupplierName))
+			//	console.ShowMessage(fmt.Sprintf("Hersteller: %s", manufacturer))
+			console.ShowMessage(fmt.Sprintf("Menge: %d", quantity))
+			console.ShowMessage(fmt.Sprintf("Notizen: %s", notes))
+			console.ShowMessage("\nSind die Daten korrekt? (y/n) oder [c] um zum Hauptmenü zurückzukehren.")
 
-		choice := console.AskForInput()
-		if strings.ToLower(choice) == "y" {
-			// Artikel zusammenstellen
-			data := models.Item{
-				Name:     name,
-				Model:    itemModel,
-				Quantity: quantity,
-				Note:     notes,
-			}
-			// Artikel hinzufügen
-			err := models.AddItem(data)
-			if err != nil {
-				console.ShowError(err)
+			choice := console.AskForInput()
+			if strings.ToLower(choice) == "y" {
+				// Artikel zusammenstellen
+				data := models.Item{
+					ArticleName:   articleName,
+					ArticleNumber: articleNumber,
+					Supplier:      selectedSupplier.SupplierName,
+					Manufacturer:  manufacturer,
+					Quantity:      quantity,
+					Note:          notes,
+				}
+				// Artikel hinzufügen
+				err := models.AddItem(data)
+				if err != nil {
+					console.ShowError(err)
+				} else {
+					console.ShowMessage("✅ Artikel erfolgreich hinzugefügt!")
+				}
+				return
+			} else if strings.ToLower(choice) == "n" {
+				console.ShowMessage("✏️ Bitte korrigieren Sie die Daten.")
+				isEditing = true // Korrekturmodus aktivieren
+				break
+			} else if strings.ToLower(choice) == "c" {
+				// Abbrechen und zurück zum Menü
+				console.InputC()
+				return
 			} else {
-				console.ShowMessage("✅ Artikel erfolgreich hinzugefügt!")
+				// Ungültige Eingabe, erneut fragen
+				console.ShowMessage("Ungültige Eingabe, bitte versuchen Sie es erneut.")
 			}
-			break
-		} else if strings.ToLower(choice) == "c" {
-			//Abbrechen und zurück zum Menü
-			console.InputC()
-			return
-		} else {
-			console.ShowMessage("✏️ Bitte korrigieren Sie die Daten.")
-			isEditing = true // Korrekturmodus aktivieren
 		}
 	}
-
-	console.ShowContinue()
-	console.Clear()
-	console.ShowExecuteCommandMenu()
 }
 
 // Case 02
@@ -139,7 +148,7 @@ func handleRemoveItem() {
 					// Ungültige Eingabe, erneut fragen
 					console.Clear()
 					console.ShowMessage(messageInvalidInput)
-					console.ShowMessage(fmt.Sprintf("Artikel: %s (%s) - %d Stück - Notizen: %s", item.Name, item.Model, item.Quantity, item.Note))
+					console.ShowMessage(fmt.Sprintf("Artikel: %s (%s) - %d Stück - Notizen: %s", item.ArticleName, item.ArticleNumber, item.Quantity, item.Note))
 					console.ShowMessage(messageInvalidInputTryAgain)
 				}
 			}
@@ -222,11 +231,10 @@ func handleChangeQuantity() {
 					// Ungültige Eingabe, erneut fragen
 					console.Clear()
 					console.ShowMessage(messageInvalidInput)
-					console.ShowMessage(fmt.Sprintf("Artikel: %s (%s) - %d Stück - Notizen: %s", item.Name, item.Model, item.Quantity, item.Note))
+					console.ShowMessage(fmt.Sprintf("Artikel: %s (%s) - %d Stück - Notizen: %s", item.ArticleName, item.ArticleNumber, item.Quantity, item.Note))
 					console.ShowMessage(messageInvalidInputTryAgain)
 				}
 			}
-
 		}
 	}
 }
@@ -263,8 +271,8 @@ func handleChanceArticleInformation() {
 			choice = console.AskForInput()
 			if strings.ToLower(choice) == "y" {
 				// Die Eingabewerte werden jetzt nur einmal initialisiert und bei Korrekturen wiederverwendet
-				newName = console.AskForName(item.Name, isEditing)
-				newModel = console.AskForModel(item.Model, isEditing)
+				newName = console.AskForName(item.ArticleName, isEditing)
+				newModel = console.AskForArticleNumber(item.ArticleNumber, isEditing)
 				newNotes = console.AskForNotes(item.Note, isEditing)
 
 				// Bestätigung zum Bearbeiten des Artikels
@@ -280,10 +288,10 @@ func handleChanceArticleInformation() {
 					if strings.ToLower(choice) == "y" {
 						// Artikel aktualisieren
 						data := models.Item{
-							Name:     newName,
-							Model:    newModel,
-							Note:     newNotes,
-							Quantity: item.Quantity,
+							ArticleName:   newName,
+							ArticleNumber: newModel,
+							Note:          newNotes,
+							Quantity:      item.Quantity,
 						}
 						// Hier wird der Index korrekt angepasst
 						err := models.UpdateItem(rowId-1, data)
@@ -312,7 +320,6 @@ func handleChanceArticleInformation() {
 					}
 				}
 			}
-
 		}
 	}
 }

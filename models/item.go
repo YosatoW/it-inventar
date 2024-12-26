@@ -14,10 +14,16 @@ import (
 
 // Item as type
 type Item struct {
-	Name     string
-	Model    string
-	Quantity int
-	Note     string
+	ArticleName   string
+	ArticleNumber string
+	Supplier      string
+	Manufacturer  string
+	Quantity      int
+	Note          string
+}
+
+type Supplier struct {
+	SupplierName string
 }
 
 func StringToInt(info string) int {
@@ -31,9 +37,9 @@ func IntToString(value int) string {
 
 // file_handler
 //
-// enthält Funktionen zum Lesen und Schreiben in die CSV-Datei.
-func getDataFromFile() ([]Item, error) {
-	file, err := os.Open(FileName)
+// getDataFromDataFile enthält Funktionen zum Lesen und Schreiben in die CSV-Datei.
+func getDataFromDataFile() ([]Item, error) {
+	file, err := os.Open(FileData)
 	if err != nil {
 		return nil, err
 	}
@@ -60,7 +66,7 @@ func getDataFromFile() ([]Item, error) {
 }
 
 func updateDataInFile() error {
-	file, err := os.Create(FileName)
+	file, err := os.Create(FileData)
 	if err != nil {
 		return err
 	}
@@ -99,10 +105,12 @@ func ParseItemFromCsvStringList(record []string) (Item, error) {
 	// Create new book based on parsed values
 	//
 	parsedItem = Item{
-		Name:     strings.TrimSpace(record[0]),
-		Model:    strings.TrimSpace(record[1]),
-		Quantity: StringToInt(record[2]), // Menge als int
-		Note:     strings.TrimSpace(record[3]),
+		ArticleName:   strings.TrimSpace(record[0]),
+		ArticleNumber: strings.TrimSpace(record[1]),
+		Supplier:      strings.TrimSpace(record[2]),
+		Manufacturer:  strings.TrimSpace(record[3]),
+		Quantity:      StringToInt(record[4]), // Menge als int
+		Note:          strings.TrimSpace(record[5]),
 	}
 
 	return parsedItem, nil
@@ -110,8 +118,10 @@ func ParseItemFromCsvStringList(record []string) (Item, error) {
 
 func getItemAsStringSlice(item Item) []string {
 	bookSerialized := []string{
-		item.Name,
-		item.Model,
+		item.ArticleName,
+		item.ArticleNumber,
+		item.Supplier,
+		item.Manufacturer,
 		IntToString(item.Quantity),
 		item.Note,
 	}
@@ -129,6 +139,54 @@ func UpdateItem(id int, updatedItem Item) error {
 	return updateDataInFile()
 }
 
+// InitializeSupplier lädt die Lieferantendaten aus der CSV-Datei
+func InitializeSupplier() ([]Supplier, error) {
+	suppliers, err := getDataFromSupplierFile()
+	if err != nil {
+		return nil, err
+	}
+	return suppliers, nil
+}
+
+// getDataFromSupplierFile liest die Lieferantendaten aus der CSV-Datei
+func getDataFromSupplierFile() ([]Supplier, error) {
+	file, err := os.Open(FileSupplier)
+	if err != nil {
+		return nil, err
+	}
+	defer file.Close()
+
+	csvReader := csv.NewReader(file)
+	records, err := csvReader.ReadAll()
+	if err != nil {
+		return nil, err
+	}
+
+	var readSuppliers []Supplier
+	for _, record := range records {
+		readSuppliers = append(readSuppliers, Supplier{
+			SupplierName: record[0],
+		})
+	}
+
+	return readSuppliers, nil
+}
+
+// SelectSupplier zeigt die Lieferantenauswahl an und gibt den ausgewählten Lieferanten zurück
+func SelectSupplier() Supplier {
+	fmt.Println("Bitte wählen Sie einen Lieferanten aus der Liste:")
+	for i, supplier := range suppliers {
+		fmt.Printf("%d: %s\n", i+1, supplier.SupplierName)
+	}
+
+	var choice int
+	fmt.Scan(&choice)
+	if choice > 0 && choice <= len(suppliers) {
+		return suppliers[choice-1]
+	}
+	return Supplier{}
+}
+
 //
 //
 // file_handler //
@@ -142,11 +200,12 @@ func UpdateItem(id int, updatedItem Item) error {
 //
 // Verwaltung der Items (CRUD-Operationen) und die Dateioperationen.
 
-const FileName = "data.csv"
+const FileData = "data.csv"
 const FileCategories = "categories.csv"
 const FileSupplier = "supplier.csv"
 
 var items []Item
+var suppliers []Supplier
 
 // AddItem adds the passed Item to the Inventory
 func AddItem(newItem Item) error {
@@ -160,7 +219,13 @@ func AddItem(newItem Item) error {
 // Initialize does the initialization of the repository
 func Initialize() error {
 	var err error
-	items, err = getDataFromFile()
+	// Initialisieren Artikel
+	items, err = getDataFromDataFile()
+	if err != nil {
+		return err
+	}
+	// Initialisieren Lieferanten
+	suppliers, err = getDataFromSupplierFile()
 	if err != nil {
 		return err
 	}
