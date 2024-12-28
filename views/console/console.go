@@ -325,3 +325,26 @@ func askForInput(fieldName string, defaultValue string, isEditing bool, validate
 		}
 	}
 }
+
+func ShowOption() {
+	for {
+		fmt.Println("\nOptions:")
+		fmt.Println("  'c' - Continue to the service menu")
+		fmt.Print("Enter your choice: ")
+
+		var input string
+		_, err := fmt.Scanln(&input) // Read user input
+		if err != nil {
+			fmt.Println("Error reading input. Please try again.")
+			continue // Prompt user again
+		}
+
+		// Validate user input
+		if input == "c" || input == "C" {
+			fmt.Println("Returning to the service menu...")
+			break // Exit the loop
+		} else {
+			fmt.Println("Invalid input. Please enter 'c' to continue.")
+		}
+	}
+}
