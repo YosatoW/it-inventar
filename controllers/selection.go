@@ -1,6 +1,7 @@
 package controllers
 
 import (
+	"fmt"
 	"it_inventar/views/console"
 	"strings"
 )
@@ -66,17 +67,23 @@ func hiddenCommand() {
 		}
 		switch choice {
 		case "1":
-			console.AskForSupplier("", false)
+			fmt.Println("* Showing Suppliers *")
+			ShowSuppliers("supplier.csv")
 		case "2":
-			console.AskForStatus("", false)
+			fmt.Println("* Showing Existing Suppliers *")
+			AddSupplier("supplier.csv")
 		case "3":
-			console.AskForCategory("", false)
-		case "4":
-			// TODO: Funktionalität implementieren
-		case "5":
-			// TODO: Funktionalität implementieren
-		case "6":
-			// TODO: Funktionalität implementieren
+			fmt.Println("Delete a supplier")
+			DeleteSupplier("supplier.csv")
+		case "11":
+			fmt.Print("* Showing Categories *")
+			ShowCategories("categories.csv")
+		case "12":
+			fmt.Print("* Showing Categories *")
+			AddCategory("categories.csv")
+		case "13":
+			fmt.Print("* Showing Categories *")
+			DeleteCategory("categories.csv")
 		case "c":
 			console.ShowMessage("🔙 Verlassen des Hidden Command Menüs...")
 			console.ShowExecuteCommandMenu()
