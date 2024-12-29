@@ -15,6 +15,7 @@ import (
 // Item as type
 type Item struct {
 	ArticleName   string
+	Category      string
 	ArticleNumber string
 	Supplier      string
 	Manufacturer  string
@@ -24,6 +25,9 @@ type Item struct {
 
 type Supplier struct {
 	SupplierName string
+}
+type Category struct {
+	CategoryName string
 }
 
 func StringToInt(info string) int {
@@ -106,11 +110,12 @@ func ParseItemFromCsvStringList(record []string) (Item, error) {
 	//
 	parsedItem = Item{
 		ArticleName:   strings.TrimSpace(record[0]),
-		ArticleNumber: strings.TrimSpace(record[1]),
-		Supplier:      strings.TrimSpace(record[2]),
-		Manufacturer:  strings.TrimSpace(record[3]),
-		Quantity:      StringToInt(record[4]), // Menge als int
-		Note:          strings.TrimSpace(record[5]),
+		Category:      strings.TrimSpace(record[1]),
+		ArticleNumber: strings.TrimSpace(record[2]),
+		Supplier:      strings.TrimSpace(record[3]),
+		Manufacturer:  strings.TrimSpace(record[4]),
+		Quantity:      StringToInt(record[5]), // Menge als int
+		Note:          strings.TrimSpace(record[6]),
 	}
 
 	return parsedItem, nil
@@ -119,6 +124,7 @@ func ParseItemFromCsvStringList(record []string) (Item, error) {
 func getItemAsStringSlice(item Item) []string {
 	bookSerialized := []string{
 		item.ArticleName,
+		item.Category,
 		item.ArticleNumber,
 		item.Supplier,
 		item.Manufacturer,
@@ -137,15 +143,6 @@ func UpdateItem(id int, updatedItem Item) error {
 
 	items[id] = updatedItem
 	return updateDataInFile()
-}
-
-// InitializeSupplier lädt die Lieferantendaten aus der CSV-Datei
-func InitializeSupplier() ([]Supplier, error) {
-	suppliers, err := getDataFromSupplierFile()
-	if err != nil {
-		return nil, err
-	}
-	return suppliers, nil
 }
 
 // getDataFromSupplierFile liest die Lieferantendaten aus der CSV-Datei
@@ -172,21 +169,6 @@ func getDataFromSupplierFile() ([]Supplier, error) {
 	return readSuppliers, nil
 }
 
-// SelectSupplier zeigt die Lieferantenauswahl an und gibt den ausgewählten Lieferanten zurück
-func SelectSupplier() Supplier {
-	fmt.Println("Bitte wählen Sie einen Lieferanten aus der Liste:")
-	for i, supplier := range suppliers {
-		fmt.Printf("%d: %s\n", i+1, supplier.SupplierName)
-	}
-
-	var choice int
-	fmt.Scan(&choice)
-	if choice > 0 && choice <= len(suppliers) {
-		return suppliers[choice-1]
-	}
-	return Supplier{}
-}
-
 //
 //
 // file_handler //
@@ -206,6 +188,7 @@ const FileSupplier = "supplier.csv"
 
 var items []Item
 var suppliers []Supplier
+var categories []Category
 
 // AddItem adds the passed Item to the Inventory
 func AddItem(newItem Item) error {
@@ -237,6 +220,12 @@ func GetAllItems() []Item {
 	allItems := make([]Item, len(items))
 	copy(allItems, items)
 	return allItems
+}
+
+func GetAllCategories() []Category {
+	allCategories := make([]Category, len(categories))
+	copy(allCategories, categories)
+	return allCategories
 }
 
 // GetItemById retrieves an item by its index

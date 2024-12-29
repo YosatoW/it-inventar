@@ -7,22 +7,26 @@ import (
 	"log"
 	"os"
 	"os/exec"
+	"strconv"
 	"strings"
 )
 
 const (
+	InitialPage = 0
+	PageSize    = 15
+
 	ExitStatusCodeNoError int = 0
 	// ItemDetailsMessage or the output of article information.
-	ItemDetailsMessage = "Artikel: %s (%s) - %d Stück - Notizen: %s"
+	ItemDetailsMessage = "Artikel: %s | Kategorie: %s (%s) | %d Stück | Notizen: %s"
 )
 
 // ShowAllItems shows all the available books in the library to the console
 func ShowAllItems(items []models.Item, startIndex int) {
 	// Berechnung der maximalen Länge für jede Spalte
-	maxArticleNameLen := len("Artikelbezeichnung")
-	maxArticleNumberLen := len("Artikelnummer")
+	maxArticleNameLen := len("Artikel-Bez.")
+	maxArticleCategoryLen := len("Kategorie")
+	maxArticleNumberLen := len("Artikel-Nr.")
 	maxSupplierLen := len("Lieferant")
-	//maxManufacturerLen := len("Hersteller")
 	manQuantityLen := len("Menge [Stk]")
 	maxNoteLen := len("Notizen")
 
@@ -30,6 +34,9 @@ func ShowAllItems(items []models.Item, startIndex int) {
 	for _, item := range items {
 		if len(item.ArticleName) > maxArticleNameLen {
 			maxArticleNameLen = len(item.ArticleName)
+		}
+		if len(item.Category) > maxArticleCategoryLen {
+			maxArticleCategoryLen = len(item.Category)
 		}
 		if len(item.ArticleNumber) > maxArticleNumberLen {
 			maxArticleNumberLen = len(item.ArticleNumber)
@@ -46,20 +53,22 @@ func ShowAllItems(items []models.Item, startIndex int) {
 	}
 
 	// Kopfzeile mit dynamisch berechneten Spaltenbreiten anzeigen
-	fmt.Printf("%5s | %-*s | %-*s | %-*s | %-*s | %-*s |\n",
+	fmt.Printf("%5s | %-*s | %-*s | %-*s | %-*s | %-*s | %-*s |\n",
 		"ID",
-		maxArticleNameLen, "Artikelbezeichnung",
-		maxArticleNumberLen, "Artikelnummer",
+		maxArticleNameLen, "Artikel-Bez.",
+		maxArticleCategoryLen, "Kategorie",
+		maxArticleNumberLen, "Artikel-Nr.",
 		maxSupplierLen, "Lieferant",
 		manQuantityLen, "Menge [Stk]",
 		maxNoteLen, "Notizen")
-	fmt.Println(strings.Repeat("-", maxArticleNameLen+maxArticleNumberLen+maxSupplierLen+manQuantityLen+maxNoteLen+25)) // Dynamische Trennlinie
+	ShowMessage(strings.Repeat("-", maxArticleNameLen+maxArticleNumberLen+maxSupplierLen+manQuantityLen+maxNoteLen+25))
 
 	// Artikel anzeigen mit fortlaufender ID
 	for index, item := range items {
-		fmt.Printf("%5d | %-*s | %-*s | %-*s | %-*d | %-*s |\n",
+		fmt.Printf("%5d | %-*s | %-*s | %-*s | %-*s | %-*d | %-*s |\n",
 			startIndex+index+1,
 			maxArticleNameLen, item.ArticleName,
+			maxArticleCategoryLen, item.Category,
 			maxArticleNumberLen, item.ArticleNumber,
 			maxSupplierLen, item.Supplier,
 			manQuantityLen, item.Quantity,
@@ -99,13 +108,13 @@ func Clear() {
 
 // ShowContinue shows the continuation information to the console
 func ShowContinue() {
-	fmt.Println("Drücken Sie [Enter], um fortzufahren...")
+	ShowMessage("Drücken Sie [Enter], um fortzufahren...")
 	bufio.NewReader(os.Stdin).ReadString('\n')
 }
 
 // ShowGoodbye shows a goodbye message to the console
 func ShowGoodbye() {
-	fmt.Println("Goodbye!")
+	ShowMessage("Goodbye!")
 }
 
 // ShutDownNormal terminates the application with exit status code 0
@@ -115,7 +124,7 @@ func ShutDownNormal() {
 
 // ShowAddItemInformation shows the information and format about adding a Item
 func ShowAddItemInformation() {
-	fmt.Println("Bitte geben Sie die Artikeldaten ein:")
+	ShowMessage("Bitte geben Sie die Artikeldaten ein:")
 }
 
 // ShowMessage shows the message to the console
@@ -124,7 +133,7 @@ func ShowMessage(message string) {
 }
 
 func ConfirmTheArticle(item models.Item) string {
-	return fmt.Sprintf(ItemDetailsMessage, item.ArticleName, item.ArticleNumber, item.Quantity, item.Note)
+	return fmt.Sprintf(ItemDetailsMessage, item.ArticleName, item.Category, item.ArticleNumber, item.Quantity, item.Note)
 }
 
 // InputC Displays the main menu and returns to it.
@@ -147,7 +156,7 @@ func InputPageEnd() bool {
 // ChecksInventory whether the inventory (items) is empty.
 func ChecksInventory() bool {
 	if len(models.GetAllItems()) == 0 {
-		ShowMessage("❌ Es sind keine Artikel im Inventar vorhanden.")
+		ShowMessage("❌ Es sind keine Artikel vorhanden.")
 		ShowContinue()
 		Clear()
 		ShowExecuteCommandMenu()
@@ -173,10 +182,29 @@ func PageIndexCalculate(page, pageSize, totalItems int) (int, int) {
 	return start, end
 }
 
-// PageIndexPrompt Shows the prompt for editing, scrolling or canceling
-func PageIndexPrompt() string {
-	ShowMessage("Gib die ID des zu bearbeitenden Artikels ein, drücke [Enter] für nächste seite oder [c], um zum Hauptmenü zurückzukehren.")
+func PageIndexPrompt(itemType string) string {
+	fmt.Printf("Gib die ID des %s ein, drücke [Enter] für nächste Seite oder [c], um zum Hauptmenü zurückzukehren.\n", itemType)
 	return AskForInput()
+}
+
+// PageIndexView Shows the prompt for scrolling or canceling
+func PageIndexView() string {
+	ShowMessage("Drücke [Enter] für nächste seite oder [c], um zum Hauptmenü zurückzukehren.")
+	return AskForInput()
+}
+
+// MessageGeneralInvalidID displays message with: Invalid ID. Please enter a valid ID
+func MessageGeneralInvalidID() {
+	ShowMessage("❌ Ungültige ID. Bitte gib eine gültige ID ein.")
+}
+
+// MessageGeneralNotEmpty displays an error message indicating that a field cannot be empty.
+func MessageGeneralNotEmpty(fieldName string) {
+	fmt.Printf("%s darf nicht leer sein.\n", fieldName)
+}
+
+func MessageSelectIDPrompt() {
+	ShowMessage("Bitte wählen Sie eine ID aus der Liste")
 }
 
 // PageIndexUserInput Processes the user input for editing, scrolling or canceling
@@ -195,27 +223,14 @@ func PageIndexUserInput(choice string, page *int, end int, items []models.Item) 
 	} else {
 		// Check whether the input is a valid ID
 		rowId := models.StringToInt(choice)
-		if rowId <= 0 || rowId > len(items) {
-			ShowMessage("❌ Ungültige ID. Bitte gib eine gültige ID ein.")
+		if rowId < 1 || rowId > len(items) {
+			MessageGeneralInvalidID()
 			ShowContinue()
 			return false, nil, 0
 		}
-
-		// Check whether the article exists and display
-		item := models.GetItemById(rowId - 1) // The index is adjusted correctly here
-		if item == nil {
-			ShowMessage("❌ Artikel mit dieser ID existiert nicht.")
-			ShowContinue()
-			return false, nil, 0
-		}
-		return false, item, rowId
+		return false, &items[rowId-1], rowId
 	}
 	return false, nil, 0
-}
-
-// ShowMessageData displays an error message indicating that a field cannot be empty.
-func ShowMessageData(fieldName string) {
-	fmt.Printf("%s darf nicht leer sein.\n", fieldName)
 }
 
 // AskForName allows input for the item name, with an optional previous value if editing
@@ -225,9 +240,23 @@ func AskForName(defaultValue string, isEditing bool) string {
 	})
 }
 
-// AskForArticleNumber allows input for the item model, with an optional previous value if editing
+// AskForCategory allows input for the category, with an optional previous value if editing
+func AskForCategory(defaultValue string, isEditing bool) string {
+	return askForInput("Kategorie", defaultValue, isEditing, func(input string) bool {
+		return input != ""
+	})
+}
+
+// AskForArticleNumber allows input for the item number, with an optional previous value if editing
 func AskForArticleNumber(defaultValue string, isEditing bool) string {
 	return askForInput("Artikelnummer", defaultValue, isEditing, func(input string) bool {
+		return input != ""
+	})
+}
+
+// AskForSupplier allows input for the supplier, with an optional previous value if editing
+func AskForSupplier(defaultValue string, isEditing bool) string {
+	return askForInput("Lieferant", defaultValue, isEditing, func(input string) bool {
 		return input != ""
 	})
 }
@@ -248,7 +277,7 @@ func AskForQuantity(defaultValue int, isEditing bool) int {
 		}
 
 		if strings.TrimSpace(quantityInput) == "" {
-			ShowMessageData(prompt)
+			MessageGeneralNotEmpty(prompt)
 			continue
 		}
 
@@ -278,34 +307,6 @@ func AskForNotes(defaultValue string, isEditing bool) string {
 	return note // Verwende die neue Eingabe
 }
 
-// AskForStatus allows input for the item name, with an optional previous value if editing
-func AskForStatus(defaultValue string, isEditing bool) string {
-	return askForInput("Status", defaultValue, isEditing, func(input string) bool {
-		return input != ""
-	})
-}
-
-// AskForSupplier allows input for the supplier, with an optional previous value if editing
-func AskForSupplier(defaultValue string, isEditing bool) string {
-	return askForInput("Lieferant", defaultValue, isEditing, func(input string) bool {
-		return input != ""
-	})
-}
-
-// AskForManufacturer allows input for the manufacturer, with an optional previous value if editing
-func AskForManufacturer(defaultValue string, isEditing bool) string {
-	return askForInput("Hersteller", defaultValue, isEditing, func(input string) bool {
-		return input != ""
-	})
-}
-
-// AskForCategory allows input for the category, with an optional previous value if editing
-func AskForCategory(defaultValue string, isEditing bool) string {
-	return askForInput("Kategorie", defaultValue, isEditing, func(input string) bool {
-		return input != ""
-	})
-}
-
 // askForInput is a generic input handler for common input logic with validation.
 func askForInput(fieldName string, defaultValue string, isEditing bool, validate func(string) bool) string {
 	for {
@@ -321,9 +322,59 @@ func askForInput(fieldName string, defaultValue string, isEditing bool, validate
 		} else if validate(input) {
 			return input // Verwende die neue Eingabe, wenn sie gültig ist
 		} else {
-			ShowMessageData(fieldName)
+			MessageGeneralNotEmpty(fieldName)
 		}
 	}
+}
+
+// SelectItem zeigt eine Auswahl in Seiten an und gibt das ausgewählte Element zurück
+func SelectItem(items []string, pageSize int, itemType string) string {
+	page := 0
+	totalPages := (len(items) + pageSize - 1) / pageSize
+
+	for {
+		start, end := PageIndexCalculate(page, pageSize, len(items))
+
+		fmt.Printf("Bitte wählen Sie einen %s aus der Liste:\n", itemType)
+		for i := start; i < end; i++ {
+			fmt.Printf("%d: %s\n", i+1, items[i])
+		}
+
+		if totalPages > 1 {
+			fmt.Printf("Seite %d von %d.\n", page+1, totalPages)
+		}
+
+		input := PageIndexPrompt(itemType)
+		input = strings.TrimSpace(input)
+
+		if strings.ToLower(input) == "c" {
+			ShowMessage("Aktion abgebrochen. Drücken Sie [Enter], um fortzufahren...")
+			return ""
+		}
+
+		if input == "" {
+			page = (page + 1) % totalPages
+			continue
+		}
+
+		choice, err := strconv.Atoi(input)
+		if err == nil && choice > 0 && choice <= len(items) {
+			return items[choice-1]
+		}
+
+		MessageGeneralInvalidID()
+		ShowContinue()
+	}
+}
+
+// SelectCategory zeigt die Kategorienauswahl in Seiten an und gibt die ausgewählte Kategorie zurück
+func SelectCategory(categories []string, pageSize int) string {
+	return SelectItem(categories, pageSize, "Kategorie")
+}
+
+// SelectSupplier zeigt die Lieferantenauswahl in Seiten an und gibt den ausgewählten Lieferanten zurück
+func SelectSupplier(suppliers []string, pageSize int) string {
+	return SelectItem(suppliers, pageSize, "Lieferant")
 }
 
 func ShowOption() {
