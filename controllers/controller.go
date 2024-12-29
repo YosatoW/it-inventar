@@ -44,88 +44,54 @@ func handleAddItem() {
 	console.ShowAddItemInformation()
 
 	var isEditing bool = false
-	var articleName, articleNumber, notes string
+	var articleName, chosenCategory, articleNumber, chosenSupplier, notes string
 	var quantity int
-	var chosenCategories []string
-	var chosenSuppliers []string
 
 	selectedCategories, err := Category.ReadCategories(models.FileCategories)
 	if err != nil {
 		console.ShowError(err)
 		return
 	}
-	selectedSuppliers, err := Category.ReadCategories(models.FileSupplier)
+	selectedSuppliers, err := Supplier.ReadSuppliers(models.FileSupplier)
 	if err != nil {
 		console.ShowError(err)
 		return
 	}
 
 	for {
-		// Die Eingabewerte werden jetzt nur einmal initialisiert und bei Korrekturen wiederverwendet
 		articleName = console.AskForName(articleName, isEditing)
-
-		chosenCategory := console.SelectCategory(selectedCategories, pageSize)
+		chosenCategory = console.HandleAddSelectItem(chosenCategory, selectedCategories, "Kategorie", isEditing)
 		if chosenCategory == "" {
 			return
 		}
-		chosenCategories = []string{chosenCategory}
-
 		articleNumber = console.AskForArticleNumber(articleNumber, isEditing)
-
-		chosenSupplier := console.SelectSupplier(selectedSuppliers, pageSize)
+		chosenSupplier = console.HandleAddSelectItem(chosenSupplier, selectedSuppliers, "Lieferant", isEditing)
 		if chosenSupplier == "" {
 			return
 		}
-		chosenSuppliers = []string{chosenSupplier}
-
 		quantity = console.AskForQuantity(quantity, isEditing)
 		notes = console.AskForNotes(notes, isEditing)
 
-		for {
-			// Benutzer überprüft die Eingaben
-			console.Clear()
-			console.ShowMessage("Bitte überprüfen Sie die eingegebenen Daten:")
-			console.ShowMessage(fmt.Sprintf("Artikel-Bez.: %s", articleName))
-			console.ShowMessage(fmt.Sprintf("Kategorie: %s", chosenCategories[0]))
-			console.ShowMessage(fmt.Sprintf("Artikel-Nr.: %s", articleNumber))
-			console.ShowMessage(fmt.Sprintf("Lieferant: %s", chosenSuppliers[0]))
-			console.ShowMessage(fmt.Sprintf("Menge: %d", quantity))
-			console.ShowMessage(fmt.Sprintf("Notizen: %s", notes))
-			console.ShowMessage("\nSind die Daten korrekt? (y/n) oder [c] um zum Hauptmenü zurückzukehren.")
-
-			choice := console.AskForInput()
-			if strings.ToLower(choice) == "y" {
-				// Artikel zusammenstellen
-				data := models.Item{
-					ArticleName:   articleName,
-					Category:      chosenCategories[0],
-					ArticleNumber: articleNumber,
-					Supplier:      chosenSuppliers[0],
-					Quantity:      quantity,
-					Note:          notes,
-				}
-				// Artikel hinzufügen
-				err := models.AddItem(data)
-				if err != nil {
-					console.ShowError(err)
-				} else {
-					console.ShowMessage("✅ Artikel erfolgreich hinzugefügt!")
-					console.ShowContinue()
-					console.InputC()
-					return
-				}
-			} else if strings.ToLower(choice) == "n" {
-				console.ShowMessage("✏️ Bitte korrigieren Sie die Daten.")
-				isEditing = true // Korrekturmodus aktivieren
-				break
-			} else if strings.ToLower(choice) == "c" {
-				// Abbrechen und zurück zum Menü
+		if handleConfirmItemDetails(articleName, chosenCategory, articleNumber, chosenSupplier, quantity, notes) {
+			data := models.Item{
+				ArticleName:   articleName,
+				Category:      chosenCategory,
+				ArticleNumber: articleNumber,
+				Supplier:      chosenSupplier,
+				Quantity:      quantity,
+				Note:          notes,
+			}
+			err := models.AddItem(data)
+			if err != nil {
+				console.ShowError(err)
+			} else {
+				console.ShowMessage("✅ Artikel erfolgreich hinzugefügt!")
+				console.ShowContinue()
 				console.InputC()
 				return
-			} else {
-				// Ungültige Eingabe, erneut fragen
-				console.ShowMessage("Ungültige Eingabe, bitte versuchen Sie es erneut.")
 			}
+		} else {
+			isEditing = true
 		}
 	}
 }
@@ -267,7 +233,7 @@ func handleChangeQuantity() {
 	}
 }
 
-// Case 03
+// Case 04
 // handleChanceArticleInformation bearbeitet einen Artikel im Inventar
 func handleChanceArticleInformation() {
 	console.Clear()
@@ -280,7 +246,7 @@ func handleChanceArticleInformation() {
 	page := InitialPage
 	for {
 		var isEditing bool = false
-		var newName, newModel, newNotes string
+		var NewArticleName, newCategory, newArticleNumber, newSupplier, newNotes string
 
 		start, end := console.PageIndexCalculate(page, pageSize, len(items))
 
@@ -293,62 +259,107 @@ func handleChanceArticleInformation() {
 			return
 		}
 		if item != nil {
-			// Zeige aktuelle Artikelinformationen und frage nach neuen Werten
-			console.ShowMessage(fmt.Sprintf("%s\nDiesen Artikel bearbeiten? (y/n)", console.ConfirmTheArticle(*item)))
 
-			choice = console.AskForInput()
-			if strings.ToLower(choice) == "y" {
-				// Die Eingabewerte werden jetzt nur einmal initialisiert und bei Korrekturen wiederverwendet
-				newName = console.AskForName(item.ArticleName, isEditing)
-				newModel = console.AskForArticleNumber(item.ArticleNumber, isEditing)
-				newNotes = console.AskForNotes(item.Note, isEditing)
+			// Die Eingabewerte werden jetzt nur einmal initialisiert und bei Korrekturen wiederverwendet
+			console.ShowMessage(fmt.Sprintf("Aktuelle Artikelbezeichnung: %s", item.ArticleName))
+			NewArticleName = console.AskForName(item.ArticleName, isEditing)
 
-				// Bestätigung zum Bearbeiten des Artikels
-				console.ShowMessage("Bitte überprüfen Sie die neuen Daten:")
-				console.ShowMessage(fmt.Sprintf("Artikelbezeichnung: %s", newName))
-				console.ShowMessage(fmt.Sprintf("Artikelnummer: %s", newModel))
-				console.ShowMessage(fmt.Sprintf("Notizen: %s", newNotes))
-				console.ShowMessage("\nSind die Daten korrekt? (y/n) oder [c] um zum Hauptmenü zurückzukehren.")
+			// Kategorien und Lieferanten laden
+			selectedCategories, err := Category.ReadCategories(models.FileCategories)
+			if err != nil {
+				console.ShowError(err)
+				return
+			}
+			selectedSuppliers, err := Supplier.ReadSuppliers(models.FileSupplier)
+			if err != nil {
+				console.ShowError(err)
+				return
+			}
 
-				for {
-					choice = console.AskForInput()
+			// Kategorie auswählen
+			console.ShowMessage(fmt.Sprintf("Aktuelle Kategorie: %s", item.Category))
+			newCategory = selectItemWithCancel(selectedCategories, "Kategorie")
+			if newCategory == "" {
+				return
+			}
 
-					if strings.ToLower(choice) == "y" {
-						// Artikel aktualisieren
-						data := models.Item{
-							ArticleName:   newName,
-							ArticleNumber: newModel,
-							Note:          newNotes,
-							Quantity:      item.Quantity,
-						}
-						// Hier wird der Index korrekt angepasst
-						err := models.UpdateItem(rowId-1, data)
-						if err != nil {
-							console.ShowError(err)
-						} else {
-							console.ShowMessage("✅ Artikel erfolgreich aktualisiert!")
-							console.ShowContinue()
-							console.Clear()
-							console.ShowExecuteCommandMenu()
-							return
-						}
-					} else if strings.ToLower(choice) == "c" {
-						console.InputC()
-						return
-					} else if strings.ToLower(choice) == "n" {
-						console.HandleChancelAction()
-						break
-					} else {
-						console.Clear()
-						console.ShowMessage(messageInvalidInput)
-						console.ShowMessage("Für folgende Artikel:")
-						console.ShowMessage(fmt.Sprintf("%s (%s)\nAnzahl: %d Stück\nNotizen: %s", newName, newModel, item.Quantity, newNotes))
-						console.ShowMessage("---------------")
-						console.ShowMessage(messageInvalidInputTryAgain)
-					}
+			console.ShowMessage(fmt.Sprintf("Aktuelle Artikelnummer: %s", item.ArticleNumber))
+			newArticleNumber = console.AskForArticleNumber(item.ArticleNumber, isEditing)
+
+			// Lieferant auswählen
+			console.ShowMessage(fmt.Sprintf("Aktueller Lieferant: %s", item.Supplier))
+			newSupplier = selectItemWithCancel(selectedSuppliers, "Lieferant")
+			if newSupplier == "" {
+				return
+			}
+
+			newQuantity := item.Quantity
+
+			console.ShowMessage(fmt.Sprintf("Aktuelle Notizen: %s", item.Note))
+			newNotes = console.AskForNotes(item.Note, isEditing)
+
+			// Bestätigung zum Bearbeiten des Artikels
+			if handleConfirmItemDetails(NewArticleName, newCategory, newArticleNumber, newSupplier, newQuantity, newNotes) {
+				// Artikel aktualisieren
+				data := models.Item{
+					ArticleName:   NewArticleName,
+					Category:      newCategory,
+					ArticleNumber: newArticleNumber,
+					Supplier:      newSupplier,
+					Quantity:      newQuantity,
+					Note:          newNotes,
 				}
+				// Hier wird der Index korrekt angepasst
+				err := models.UpdateItem(rowId-1, data)
+				if err != nil {
+					console.ShowError(err)
+				} else {
+					console.ShowMessage("✅ Artikel erfolgreich aktualisiert!")
+					console.ShowContinue()
+					console.Clear()
+					console.ShowExecuteCommandMenu()
+					return
+				}
+			} else {
+				isEditing = true
 			}
 		}
+	}
+}
+
+func selectItemWithCancel(items []string, itemType string) string {
+	selectedItem := console.SelectItem(items, pageSize, itemType)
+	if selectedItem == "" {
+		console.InputC()
+	}
+	return selectedItem
+}
+
+// confirmItemDetails is a method that is used to obtain confirmation from the user for the specified item details
+func handleConfirmItemDetails(articleName, category, articleNumber, supplier string, quantity int, notes string) bool {
+	console.Clear()
+	console.ShowMessage("Bitte überprüfen Sie die neuen Daten:")
+	console.ShowMessage(fmt.Sprintf("Artikelbezeichnung: %s", articleName))
+	console.ShowMessage(fmt.Sprintf("Kategorie: %s", category))
+	console.ShowMessage(fmt.Sprintf("Artikelnummer: %s", articleNumber))
+	console.ShowMessage(fmt.Sprintf("Lieferant: %s", supplier))
+	console.ShowMessage(fmt.Sprintf("Menge: %d", quantity))
+	console.ShowMessage(fmt.Sprintf("Notizen: %s", notes))
+	console.ShowMessage("\nSind die Daten korrekt? (y/n) oder [c] um zum Hauptmenü zurückzukehren.")
+
+	choice := console.AskForInput()
+	switch strings.ToLower(choice) {
+	case "y":
+		return true
+	case "n":
+		console.ShowMessage("✏️ Bitte korrigieren Sie die Daten.")
+		return false
+	case "c":
+		console.InputC()
+		return false
+	default:
+		console.ShowMessage("Ungültige Eingabe, bitte versuchen Sie es erneut.")
+		return handleConfirmItemDetails(articleName, category, articleNumber, supplier, quantity, notes)
 	}
 }
 

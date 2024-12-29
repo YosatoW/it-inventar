@@ -13,7 +13,7 @@ import (
 
 const (
 	InitialPage = 0
-	PageSize    = 15
+	PageSize    = 10
 
 	ExitStatusCodeNoError int = 0
 	// ItemDetailsMessage or the output of article information.
@@ -61,7 +61,7 @@ func ShowAllItems(items []models.Item, startIndex int) {
 		maxSupplierLen, "Lieferant",
 		manQuantityLen, "Menge [Stk]",
 		maxNoteLen, "Notizen")
-	ShowMessage(strings.Repeat("-", maxArticleNameLen+maxArticleNumberLen+maxSupplierLen+manQuantityLen+maxNoteLen+25))
+	ShowMessage(strings.Repeat("-", maxArticleNameLen+maxArticleCategoryLen+maxArticleNumberLen+maxSupplierLen+manQuantityLen+maxNoteLen+25))
 
 	// Artikel anzeigen mit fortlaufender ID
 	for index, item := range items {
@@ -347,34 +347,45 @@ func SelectItem(items []string, pageSize int, itemType string) string {
 		input := PageIndexPrompt(itemType)
 		input = strings.TrimSpace(input)
 
-		if strings.ToLower(input) == "c" {
+		switch strings.ToLower(input) {
+		case "c":
 			ShowMessage("Aktion abgebrochen. Drücken Sie [Enter], um fortzufahren...")
 			return ""
-		}
-
-		if input == "" {
+		case "":
 			page = (page + 1) % totalPages
-			continue
+		default:
+			choice, err := strconv.Atoi(input)
+			if err == nil && choice > 0 && choice <= len(items) {
+				return items[choice-1]
+			}
+			MessageGeneralInvalidID()
+			ShowContinue()
 		}
-
-		choice, err := strconv.Atoi(input)
-		if err == nil && choice > 0 && choice <= len(items) {
-			return items[choice-1]
-		}
-
-		MessageGeneralInvalidID()
-		ShowContinue()
 	}
 }
 
-// SelectCategory zeigt die Kategorienauswahl in Seiten an und gibt die ausgewählte Kategorie zurück
-func SelectCategory(categories []string, pageSize int) string {
-	return SelectItem(categories, pageSize, "Kategorie")
-}
+//// SelectCategory zeigt die Kategorienauswahl in Seiten an und gibt die ausgewählte Kategorie zurück
+//func SelectCategory(categories []string, pageSize int) string {
+//	return SelectItem(categories, pageSize, "Kategorie")
+//}
+//
+//// SelectSupplier zeigt die Lieferantenauswahl in Seiten an und gibt den ausgewählten Lieferanten zurück
+//func SelectSupplier(suppliers []string, pageSize int) string {
+//	return SelectItem(suppliers, pageSize, "Lieferant")
+//}
 
-// SelectSupplier zeigt die Lieferantenauswahl in Seiten an und gibt den ausgewählten Lieferanten zurück
-func SelectSupplier(suppliers []string, pageSize int) string {
-	return SelectItem(suppliers, pageSize, "Lieferant")
+// HandleAddSelectItem checks whether the user is in edit mode and displays the current selection before a new selection is made.
+func HandleAddSelectItem(currentItem string, items []string, itemType string, isEditing bool) string {
+	if !isEditing {
+		return SelectItem(items, PageSize, itemType)
+	} else {
+		ShowMessage(fmt.Sprintf("Aktuelle: %s", currentItem))
+		newItem := SelectItem(items, PageSize, itemType)
+		if newItem != "" {
+			return newItem
+		}
+		return currentItem
+	}
 }
 
 func ShowOption() {
