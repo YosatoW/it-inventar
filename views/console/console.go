@@ -388,25 +388,80 @@ func HandleAddSelectItem(currentItem string, items []string, itemType string, is
 	}
 }
 
-func ShowOption() {
-	for {
-		fmt.Println("\nOptions:")
-		fmt.Println("  'c' - Continue to the service menu")
-		fmt.Print("Enter your choice: ")
-
-		var input string
-		_, err := fmt.Scanln(&input) // Read user input
-		if err != nil {
-			fmt.Println("Error reading input. Please try again.")
-			continue // Prompt user again
-		}
-
-		// Validate user input
-		if input == "c" || input == "C" {
-			fmt.Println("Returning to the service menu...")
-			break // Exit the loop
-		} else {
-			fmt.Println("Invalid input. Please enter 'c' to continue.")
-		}
+// DisplaySuppliers displays a paginated list of suppliers
+func DisplaySuppliers(suppliers []string, start, end int) {
+	fmt.Println("* Available suppliers:")
+	for i := start; i < end && i < len(suppliers); i++ {
+		fmt.Printf("%d. %s\n", i+1, suppliers[i]) // Add 1 to i for correct numbering
 	}
+}
+
+func ShowSuppliersList(suppliers []string) {
+	fmt.Println("* Showing Existing Suppliers *")
+	for i, supplier := range suppliers {
+		fmt.Printf("%d. %s\n", i+1, supplier)
+	}
+}
+
+// ShowNoSuppliersMessage displays a message when no suppliers are available
+func ShowNoSuppliersMessage() {
+	fmt.Println("List is empty. No supplier available.")
+}
+
+func ShowEndOfSupplier() {
+	fmt.Println("End of supplier list reached.")
+}
+
+// DisplayCategories displays a paginated list of suppliers
+func DisplayCategories(suppliers []string, start, end int) {
+	fmt.Println("* Available Categories:")
+	for i := start; i < end && i < len(suppliers); i++ {
+		fmt.Printf("%d. %s\n", i+1, suppliers[i]) // Add 1 to i for correct numbering
+	}
+}
+
+func ShowCategoriesList(Categories []string) {
+	fmt.Println("* Showing Existing Categories *")
+	for i, category := range Categories {
+		fmt.Printf("%d. %s\n", i+1, category)
+	}
+}
+
+// ShowNoCategoriesMessage displays a message when no Category are available
+func ShowNoCategoriesMessage() {
+	fmt.Println("List is empty. No Category available.")
+}
+
+func ShowEndOfCategory() {
+	fmt.Println("End of Category list reached.")
+}
+
+// ErrorMessage displays an error message
+func ErrorMessage(message string) {
+	fmt.Println("Error:", message)
+}
+
+func GetPageInput() string {
+	fmt.Print("Press Enter to continue or 'c' to cancel:\n")
+	reader := bufio.NewReader(os.Stdin)
+	input, _ := reader.ReadString('\n')
+	return strings.TrimSpace(input)
+}
+
+// ShowOnlyCancelMessage displays a message indicating that only 'c' can be pressed to return to the service menu
+func ShowOnlyCancelMessage() string {
+	fmt.Println("Press 'c' to continue to the service menu:")
+	reader := bufio.NewReader(os.Stdin)
+	input, _ := reader.ReadString('\n')
+	return strings.TrimSpace(input)
+}
+
+func ShowPrompt(message string) {
+	fmt.Println(message)
+}
+
+func GetUserInput() string {
+	reader := bufio.NewReader(os.Stdin)
+	input, _ := reader.ReadString('\n')
+	return strings.TrimSpace(input)
 }

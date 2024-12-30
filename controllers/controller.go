@@ -2,9 +2,9 @@ package controllers
 
 import (
 	"fmt"
-	"it_inventar/controllers/Category"
-	"it_inventar/controllers/Supplier"
 	"it_inventar/models"
+	"it_inventar/models/Category"
+	"it_inventar/models/Supplier"
 	"it_inventar/views/console"
 	"strconv"
 	"strings"
@@ -395,282 +395,252 @@ func handleViewItems() {
 	}
 }
 
-// ShowSuppliers Case 1
-// ShowSuppliers retrieves and displays the list of suppliers
-func ShowSuppliers(filePath string) {
-	suppliers, err := Supplier.ReadSuppliers(filePath)
+// handleShowSuppliers Case 1
+func handleShowSuppliers() {
+	suppliers, err := Supplier.ReadSuppliers("supplier.csv")
 	if err != nil {
-		fmt.Printf("Error reading suppliers: %v\n", err)
+		console.ErrorMessage(fmt.Sprintf("Error reading suppliers: %v\n", err))
 		return
 	}
 
+	if len(suppliers) == 0 {
+		console.ShowNoSuppliersMessage()
+		return
+	}
+
+	page := InitialPage
 	for {
-		// Display the list of suppliers
-		if len(suppliers) > 0 {
-			fmt.Println("Available suppliers:")
-			for i, supplier := range suppliers {
-				fmt.Printf("%d. %s\n", i+1, supplier)
-			}
-		} else {
-			fmt.Println("List is empty. No supplier available.")
+		start := page * pageSize
+		end := start + pageSize
+		if end > len(suppliers) {
+			end = len(suppliers) // Adjust end if it exceeds the list size
 		}
 
-		// Provide user options
-		console.ShowOption()
+		console.DisplaySuppliers(suppliers, start, end)
 
-		break
+		// Check if the end of the list has been reached
+		if end >= len(suppliers) {
+			console.ShowEndOfSupplier() // Display a message indicating the end of the list
+
+			for {
+				userChoice := console.ShowOnlyCancelMessage()
+				if userChoice == "c" {
+					break // Exit the loop and return to the menu
+				}
+			}
+			break // Exit the main loop
+		}
+
+		// For normal page navigation
+		userChoice := console.GetPageInput()
+		if userChoice == "c" {
+			break
+		} else if userChoice == "" {
+			page++ // Move to the next page
+		}
 	}
 }
 
-// AddSupplier Case 2
-// AddSupplier add supplier to existing list
-func AddSupplier(filePath string) {
-	for { // Loop to allow multiple supplier additions
+// handleAddSuppliers Case 2
+func handleAddSuppliers() {
+	filePath := "supplier.csv"
+
+	for {
 		// Display the list of existing suppliers
 		suppliers, err := Supplier.ReadSuppliers(filePath)
 		if err != nil {
-			fmt.Printf("Error reading suppliers: %v\n", err)
+			console.ErrorMessage(fmt.Sprintf("Error reading suppliers: %v", err))
 			return
 		}
+		console.ShowSuppliersList(suppliers) // Display the suppliers
 
-		if len(suppliers) > 0 {
-			fmt.Println("* Available suppliers:")
-			for i, supplier := range suppliers {
-				fmt.Printf("%d. %s\n", i+1, supplier) // Display each supplier with its index
-			}
-		} else {
-			fmt.Println("List is empty. No supplier available.") // Message if the list is empty
-		}
+		// Prompt for new supplier
+		console.ShowPrompt("Enter the name of the supplier you want to add (or 'C' to cancel):")
+		supplierName := console.GetUserInput()
 
-		// Show options to the user
-		fmt.Println("Enter the name of the supplier you want to add (or 'C' to cancel):")
-
-		// Read the supplier name input
-		var supplierName string
-		_, err = fmt.Scanln(&supplierName)
-		if err != nil {
-			return
-		}
-
-		// Check if the user wants to cancel the process
 		if supplierName == "C" || supplierName == "c" {
-			fmt.Println("Action canceled. Returning to the service menu ...")
-			break
+			console.ShowMessage("Action canceled. Returning to the service menu...")
+			return
 		}
 
 		// Add the new supplier to the file
 		err = Supplier.AddSupplierToFile(filePath, supplierName)
 		if err != nil {
-			fmt.Printf("Error adding supplier: %v\n", err)
+			console.ErrorMessage(fmt.Sprintf("Error adding supplier: %v", err))
 		} else {
-			fmt.Println("Supplier added successfully") // Confirmation message
-		}
-
-		// Reload the supplier list after adding a new one
-		suppliers, err = Supplier.ReadSuppliers(filePath)
-		if err != nil {
-			fmt.Printf("Error reloading suppliers: %v\n", err)
-			return
+			console.ShowMessage("Supplier added successfully")
 		}
 	}
 }
 
-// DeleteSupplier Case 3
-// DeleteSupplier from existing list
-func DeleteSupplier(filePath string) {
-	for {
-		// Read the current supplier list
+// handleDeleteSupplier Case 3
+func handleDeleteSupplier() {
+	filePath := "supplier.csv"
+
+	for { // Loop to allow multiple deletions
+		// Read the supplier list
 		suppliers, err := Supplier.ReadSuppliers(filePath)
 		if err != nil {
-			fmt.Printf("Error reading suppliers: %v\n", err)
+			console.ErrorMessage(fmt.Sprintf("Error reading suppliers: %v", err))
 			return
 		}
 
-		// Check if the list is empty
 		if len(suppliers) == 0 {
-			fmt.Println("No suppliers available to delete.")
+			console.ShowMessage("No suppliers available to delete.")
 			return
 		}
 
-		// Display the list of suppliers
-		fmt.Println("* Available suppliers:")
-		for i, supplier := range suppliers {
-			fmt.Printf("%d. %s\n", i+1, supplier)
-		}
+		console.ShowSuppliersList(suppliers) // Display the suppliers
 
-		// Ask the user to select a supplier to delete or cancel
-		fmt.Println("\nEnter the number of the supplier you want to delete (or 'C' to cancel):")
-		var input string
-		_, err = fmt.Scanln(&input)
-		if err != nil {
-			return
-		}
+		// Prompt user to select a supplier to delete
+		console.ShowPrompt("Enter the number of the supplier you want to delete (or 'C' to cancel):")
+		input := console.GetUserInput()
 
-		// Check if the user canceled
 		if input == "C" || input == "c" {
-			fmt.Println("Action canceled. Returning to the service menu...")
+			console.ShowMessage("Action canceled. Returning to the service menu...")
 			return
 		}
 
 		// Convert input to integer and validate
 		index, err := strconv.Atoi(input)
 		if err != nil || index < 1 || index > len(suppliers) {
-			fmt.Println("Invalid input. Please enter a valid supplier number.")
+			console.ErrorMessage("Invalid input. Please enter a valid supplier number.")
 			continue
 		}
 
-		// Remove the selected supplier from the list
+		// Perform deletion
 		supplierToDelete := suppliers[index-1]
-		suppliers = append(suppliers[:index-1], suppliers[index:]...)
-
-		// Overwrite the supplier CSV file with the updated list
-		err = Supplier.OverwriteSupplierFile(filePath, suppliers)
+		err = Supplier.DeleteSupplier(filePath, index-1)
 		if err != nil {
-			fmt.Printf("Error updating supplier file: %v\n", err)
+			console.ErrorMessage(fmt.Sprintf("Error deleting supplier: %v", err))
 			return
 		}
 
-		// Confirm the deletion
-		fmt.Printf("Supplier '%s' deleted successfully.\n\n", supplierToDelete)
+		console.ShowMessage(fmt.Sprintf("Supplier '%s' deleted successfully.", supplierToDelete))
 	}
 }
 
-// ShowCategories Case 11
-// ShowCategories retrieves and displays the list of categories
-func ShowCategories(filePath string) {
-	categories, err := Category.ReadCategories(filePath)
+// handleShowSuppliers Case 1
+func handleShowCategories() {
+	categories, err := Category.ReadCategories("categories.csv")
 	if err != nil {
-		fmt.Printf("Error reading categoriess: %v\n", err)
+		console.ErrorMessage(fmt.Sprintf("Error reading categories: %v\n", err))
 		return
 	}
 
+	if len(categories) == 0 {
+		console.ShowNoCategoriesMessage()
+		return
+	}
+
+	page := InitialPage
 	for {
-		// Display the list of category
-		if len(categories) > 0 {
-			fmt.Println("Available categories:")
-			for i, category := range categories {
-				fmt.Printf("%d. %s\n", i+1, category)
-			}
-		} else {
-			fmt.Println("List is empty. No categories available.")
+		start := page * pageSize
+		end := start + pageSize
+		if end > len(categories) {
+			end = len(categories) // Adjust end if it exceeds the list size
 		}
 
-		// Provide user options
-		console.ShowOption()
+		console.DisplayCategories(categories, start, end)
 
-		break
+		// Check if the end of the list has been reached
+		if end >= len(categories) {
+			console.ShowEndOfCategory() // Display a message indicating the end of the list
+
+			for {
+				userChoice := console.ShowOnlyCancelMessage()
+				if userChoice == "c" {
+					break // Exit the loop and return to the menu
+				}
+			}
+			break // Exit the main loop
+		}
+
+		// For normal page navigation
+		userChoice := console.GetPageInput()
+		if userChoice == "c" {
+			break
+		} else if userChoice == "" {
+			page++ // Move to the next page
+		}
 	}
 }
 
-// AddCategory Case 2
-// AddCategory add category to existing list
-func AddCategory(filePath string) {
-	for { // Loop to allow multiple category additions
-		// Display the list of existing category
+// AddCategory Case 12
+func handleAddCategories() {
+	filePath := "categories.csv"
+
+	for {
+		// Display the list of existing categories
 		categories, err := Category.ReadCategories(filePath)
 		if err != nil {
-			fmt.Printf("Error reading categories: %v\n", err)
+			console.ErrorMessage(fmt.Sprintf("Error reading categories: %v", err))
 			return
 		}
+		console.ShowCategoriesList(categories) // Display the categories
 
-		if len(categories) > 0 {
-			fmt.Println("* Available categories:")
-			for i, category := range categories {
-				fmt.Printf("%d. %s\n", i+1, category) // Display each supplier with its index
-			}
-		} else {
-			fmt.Println("List is empty. No category available.") // Message if the list is empty
-		}
+		// Prompt for new supplier
+		console.ShowPrompt("Enter the name of the category you want to add (or 'C' to cancel):")
+		categoryName := console.GetUserInput()
 
-		// Show options to the user
-		fmt.Println("Enter the name of the category you want to add (or 'C' to cancel):")
-
-		// Read the category name input
-		var categoryName string
-		_, err = fmt.Scanln(&categoryName)
-		if err != nil {
-			return
-		}
-
-		// Check if the user wants to cancel the process
 		if categoryName == "C" || categoryName == "c" {
-			fmt.Println("Action canceled. Returning to the service menu ...")
-			break
+			console.ShowMessage("Action canceled. Returning to the service menu...")
+			return
 		}
 
 		// Add the new category to the file
 		err = Category.AddCategoryToFile(filePath, categoryName)
 		if err != nil {
-			fmt.Printf("Error adding category: %v\n", err)
+			console.ErrorMessage(fmt.Sprintf("Error adding category: %v", err))
 		} else {
-			fmt.Println("Category added successfully") // Confirmation message
-		}
-
-		// Reload the category list after adding a new one
-		categories, err = Category.ReadCategories(filePath)
-		if err != nil {
-			fmt.Printf("Error reloading categories: %v\n", err)
-			return
+			console.ShowMessage("Category added successfully")
 		}
 	}
 }
 
-// DeleteCategory Case 3
-// DeleteCategory from existing list
-func DeleteCategory(filePath string) {
-	for {
-		// Read the current supplier list
+// DeleteCategory Case 13
+func handleDeleteCategories() {
+	filePath := "categories.csv"
+
+	for { // Loop to allow multiple deletions
+		// Read the supplier list
 		categories, err := Category.ReadCategories(filePath)
 		if err != nil {
-			fmt.Printf("Error reading category: %v\n", err)
+			console.ErrorMessage(fmt.Sprintf("Error reading categories: %v", err))
 			return
 		}
 
-		// Check if the list is empty
 		if len(categories) == 0 {
-			fmt.Println("No categories available to delete.")
+			console.ShowMessage("No categories available to delete.")
 			return
 		}
 
-		// Display the list of categories
-		fmt.Println("* Available categories:")
-		for i, category := range categories {
-			fmt.Printf("%d. %s\n", i+1, category)
-		}
+		console.ShowCategoriesList(categories) // Display the categories
 
-		// Ask the user to select a category to delete or cancel
-		fmt.Println("\nEnter the number of the category you want to delete (or 'C' to cancel):")
-		var input string
-		_, err = fmt.Scanln(&input)
-		if err != nil {
-			return
-		}
+		// Prompt user to select a category to delete
+		console.ShowPrompt("Enter the number of the category you want to delete (or 'C' to cancel):")
+		input := console.GetUserInput()
 
-		// Check if the user canceled
 		if input == "C" || input == "c" {
-			fmt.Println("Action canceled. Returning to the service menu...")
+			console.ShowMessage("Action canceled. Returning to the service menu...")
 			return
 		}
 
 		// Convert input to integer and validate
 		index, err := strconv.Atoi(input)
 		if err != nil || index < 1 || index > len(categories) {
-			fmt.Println("Invalid input. Please enter a valid category number.")
+			console.ErrorMessage("Invalid input. Please enter a valid category number.")
 			continue
 		}
 
-		// Remove the selected category from the list
-		supplierToDelete := categories[index-1]
-		categories = append(categories[:index-1], categories[index:]...)
-
-		// Overwrite the supplier CSV file with the updated list
-		err = Category.OverwriteCategoryFile(filePath, categories)
+		// Perform deletion
+		categoryToDelete := categories[index-1]
+		err = Category.DeleteCategory(filePath, index-1)
 		if err != nil {
-			fmt.Printf("Error updating categories file: %v\n", err)
+			console.ErrorMessage(fmt.Sprintf("Error deleting category: %v", err))
 			return
 		}
 
-		// Confirm the deletion
-		fmt.Printf("Category '%s' deleted successfully.\n\n", supplierToDelete)
+		console.ShowMessage(fmt.Sprintf("Category '%s' deleted successfully.", categoryToDelete))
 	}
 }

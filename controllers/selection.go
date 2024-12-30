@@ -56,7 +56,7 @@ func hiddenCommand() {
 		console.ShowExecuteCommandMenu()
 		return
 	}
-	// Menü-Schleife: bleibt im Hidden Command Menü
+	// Menu-loop: stays in hidden command menu
 	for {
 		console.ShowHiddenCommandMenu()
 
@@ -67,23 +67,18 @@ func hiddenCommand() {
 		}
 		switch choice {
 		case "1":
-			fmt.Println("* Showing Suppliers *")
-			ShowSuppliers("supplier.csv")
+			handleShowSuppliers()
 		case "2":
-			fmt.Println("* Showing Existing Suppliers *")
-			AddSupplier("supplier.csv")
+			handleAddSuppliers()
 		case "3":
-			fmt.Println("Delete a supplier")
-			DeleteSupplier("supplier.csv")
+			handleDeleteSupplier()
 		case "11":
-			fmt.Print("* Showing Categories *")
-			ShowCategories("categories.csv")
+			handleShowCategories()
 		case "12":
-			fmt.Print("* Showing Categories *")
-			AddCategory("categories.csv")
+			handleAddCategories()
 		case "13":
-			fmt.Print("* Showing Categories *")
-			DeleteCategory("categories.csv")
+			fmt.Print()
+			handleDeleteCategories()
 		case "c":
 			console.ShowMessage("🔙 Verlassen des Hidden Command Menüs...")
 			console.ShowExecuteCommandMenu()

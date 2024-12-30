@@ -27,13 +27,13 @@ func ShowHiddenCommandMenu() {
 	###########################################
 	#****************  SERVICE *****************
 	#******** CHOOSE YOUR OPTION BELOW *********
-	# 1. Showing Suppliers
-	# 2. Showing Existing Suppliers
-	# 3. Delete a supplier
+	# 1. Show suppliers
+	# 2. Add supplier
+	# 3. Delete supplier
 	#
-	# 11. Showing Categories
-	# 12. Showing Existing Categories
-	# 13. Delete a category
+	# 11. Show categories
+	# 12. Add category
+	# 13. Delete category
 	#
 	#
 	# c. SHOW MAIN MENU
