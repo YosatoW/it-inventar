@@ -18,14 +18,14 @@ func executeCommand() {
 		handleChangeQuantity()
 	case "4":
 		handleChanceArticleInformation()
-	case "5":
-		// TODO: Funktionalität implementieren
-	case "6":
-		// TODO: Funktionalität implementieren
-	case "7":
-		// TODO: Funktionalität implementieren
-	case "8":
-		// TODO: Funktionalität implementieren
+	//case "5":
+	//	// TODO: Funktionalität implementieren
+	//case "6":
+	//	// TODO: Funktionalität implementieren
+	//case "7":
+	//	// TODO: Funktionalität implementieren
+	//case "8":
+	//	// TODO: Funktionalität implementieren
 	case "9":
 		handleViewItems()
 	case "4600":
@@ -41,17 +41,17 @@ func executeCommand() {
 	default:
 		console.Clear()
 		console.ShowExecuteCommandMenu()
-		console.ShowMessage("❌ Ungültige Auswahl. Bitte versuchen Sie es erneut.")
+		console.ShowMessage("❌ Invalid selection. Please try again.")
 	}
 }
 
 // hiddenCommand menu for administrator access with code 4600
 func hiddenCommand() {
-	console.ShowMessage("🔒 Geben Sie den Zugangscode ein:")
+	console.ShowMessage("🔒 Enter the access code:")
 	code := console.AskForInput()
 
 	if code != "4600" {
-		console.ShowMessage("❌ Falscher Zugangscode.")
+		console.ShowMessage("❌ Incorrect access code.")
 		console.Clear()
 		console.ShowExecuteCommandMenu()
 		return
@@ -62,7 +62,7 @@ func hiddenCommand() {
 
 		choice := console.AskForInput()
 		if strings.TrimSpace(choice) == "" { // Leere Eingaben ignorieren
-			console.ShowMessage("⚠️ Leere Eingabe. Bitte eine gültige Option wählen.")
+			console.ShowMessage("⚠️ Empty input. Please choose a valid option.")
 			continue
 		}
 		switch choice {
@@ -80,11 +80,13 @@ func hiddenCommand() {
 			fmt.Print()
 			handleDeleteCategories()
 		case "c":
-			console.ShowMessage("🔙 Verlassen des Hidden Command Menüs...")
+			console.Clear()
+			console.ShowMessage("🔙 Exiting the Hidden Command Menu...")
 			console.ShowExecuteCommandMenu()
-			return // Verwende return, um die Schleife und Funktion zu verlassen
+			return // Use return to exit the loop and function
 		default:
-			console.ShowMessage("❌ Ungültige Auswahl. Bitte versuchen Sie es erneut.")
+			console.Clear()
+			console.ShowMessage("❌ Invalid selection. Please try again.")
 		}
 	}
 }

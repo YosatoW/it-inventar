@@ -107,7 +107,6 @@ func ParseItemFromCsvStringList(record []string) (Item, error) {
 	}
 
 	// Create new book based on parsed values
-	//
 	parsedItem = Item{
 		ArticleName:   strings.TrimSpace(record[0]),
 		Category:      strings.TrimSpace(record[1]),

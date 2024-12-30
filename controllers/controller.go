@@ -14,8 +14,8 @@ const (
 	InitialPage = console.InitialPage
 	pageSize    = console.PageSize
 
-	messageInvalidInput         = "Ungültige Eingabe!"
-	messageInvalidInputTryAgain = "Bitte wählen:\n[y] Übernehmen\n[n] abbrechen."
+	messageInvalidInput         = "Invalid input!"
+	messageInvalidInputTryAgain = "Please choose:\n[y] Confirm\n[n] Cancel."
 )
 
 // Run does the running of the console application
@@ -60,12 +60,12 @@ func handleAddItem() {
 
 	for {
 		articleName = console.AskForName(articleName, isEditing)
-		chosenCategory = console.HandleAddSelectItem(chosenCategory, selectedCategories, "Kategorie", isEditing)
+		chosenCategory = console.HandleAddSelectItem(chosenCategory, selectedCategories, "Category", isEditing)
 		if chosenCategory == "" {
 			return
 		}
 		articleNumber = console.AskForArticleNumber(articleNumber, isEditing)
-		chosenSupplier = console.HandleAddSelectItem(chosenSupplier, selectedSuppliers, "Lieferant", isEditing)
+		chosenSupplier = console.HandleAddSelectItem(chosenSupplier, selectedSuppliers, "Supplier", isEditing)
 		if chosenSupplier == "" {
 			return
 		}
@@ -85,7 +85,7 @@ func handleAddItem() {
 			if err != nil {
 				console.ShowError(err)
 			} else {
-				console.ShowMessage("✅ Artikel erfolgreich hinzugefügt!")
+				console.ShowMessage("✅ Item successfully added!")
 				console.ShowContinue()
 				console.InputC()
 				return
@@ -112,14 +112,14 @@ func handleRemoveItem() {
 
 		console.ShowAllItems(items[start:end], start)
 
-		choice := console.PageIndexPrompt("Artikel")
+		choice := console.PageIndexPrompt("Item")
 
 		exit, item, rowId := console.PageIndexUserInput(choice, &page, end, items)
 		if exit {
 			return
 		}
 		if item != nil {
-			console.ShowMessage(fmt.Sprintf("%s\nDiesen Artikel löschen? (y/n)", console.ConfirmTheArticle(*item)))
+			console.ShowMessage(fmt.Sprintf("%s\nDelete this item? (y/n)", console.ConfirmTheArticle(*item)))
 
 			for {
 				choice = console.AskForInput()
@@ -129,7 +129,7 @@ func handleRemoveItem() {
 					if err != nil {
 						console.ShowError(err)
 					} else {
-						console.ShowMessage("✅ Artikel erfolgreich entfernt!")
+						console.ShowMessage("✅ Item successfully removed!")
 						console.ShowContinue()
 						console.Clear()
 						console.ShowExecuteCommandMenu()
@@ -142,7 +142,7 @@ func handleRemoveItem() {
 					// Ungültige Eingabe, erneut fragen
 					console.Clear()
 					console.ShowMessage(messageInvalidInput)
-					console.ShowMessage(fmt.Sprintf("Artikel: %s (%s) - %d Stück - Notizen: %s", item.ArticleName, item.ArticleNumber, item.Quantity, item.Note))
+					console.ShowMessage(fmt.Sprintf("Item: %s (%s) - %d pieces - Notes: %s", item.ArticleName, item.ArticleNumber, item.Quantity, item.Note))
 					console.ShowMessage(messageInvalidInputTryAgain)
 				}
 			}
@@ -151,7 +151,7 @@ func handleRemoveItem() {
 }
 
 // Case 03
-// handleChangeQuantity bearbeitet einen Artikel im Inventar
+// handleChangeQuantity edits an item in the inventory
 func handleChangeQuantity() {
 	console.Clear()
 	items := models.GetAllItems()
@@ -166,52 +166,52 @@ func handleChangeQuantity() {
 
 		console.ShowAllItems(items[start:end], start)
 
-		choice := console.PageIndexPrompt("Artikel")
+		choice := console.PageIndexPrompt("Item")
 
 		exit, item, rowId := console.PageIndexUserInput(choice, &page, end, items)
 		if exit {
 			return
 		}
 		if item != nil {
-			console.ShowMessage(fmt.Sprintf("%s\nDie Mende diesen Artikel anpassen?(y/n)", console.ConfirmTheArticle(*item)))
+			console.ShowMessage(fmt.Sprintf("%s\nAdjust the quantity of this item? (y/n)", console.ConfirmTheArticle(*item)))
 
 			for {
 				choice = console.AskForInput()
 				if strings.ToLower(choice) == "y" {
-					// Frage nach Einbuchen oder Abbuchen
-					console.ShowMessage(fmt.Sprintf("[1] Einbuchen\n[2] Ausbuchen"))
+					// Ask for adding or subtracting
+					console.ShowMessage(fmt.Sprintf("[1] Add\n[2] Subtract"))
 					operation := console.AskForInput()
 
 					if strings.ToLower(operation) == "1" {
-						// Frage nach der Menge zum Einbuchen
-						console.ShowMessage(fmt.Sprintf("Aktuelle Bestand: %d Stück", item.Quantity))
-						console.ShowMessage("Geben Sie die Menge ein, die eingebucht werden soll:")
+						// Ask for the quantity to add
+						console.ShowMessage(fmt.Sprintf("Current stock: %d pieces", item.Quantity))
+						console.ShowMessage("Enter the quantity to add:")
 						quantityToAdd := console.AskForQuantity(0, false)
 						item.Quantity += quantityToAdd
 					} else if strings.ToLower(operation) == "2" {
-						// Frage nach der Menge zum Abbuchen
-						console.ShowMessage(fmt.Sprintf("Aktuelle Bestand: %d Stück", item.Quantity))
-						console.ShowMessage("Geben Sie die Menge ein, die abgebucht werden soll:")
+						// Ask for the quantity to subtract
+						console.ShowMessage(fmt.Sprintf("Current stock: %d pieces", item.Quantity))
+						console.ShowMessage("Enter the quantity to subtract:")
 						quantityToSubtract := console.AskForQuantity(0, false)
 						if item.Quantity < quantityToSubtract {
-							console.ShowMessage("❌ Die abzubuchende Menge überschreitet die vorhandene Menge.")
+							console.ShowMessage("❌ The quantity to subtract exceeds the available quantity.")
 							console.ShowContinue()
 							continue
 						}
 						item.Quantity -= quantityToSubtract
 					} else {
-						console.ShowMessage("❌ Ungültige Auswahl. Bitte wählen Sie '1' oder '2'.")
+						console.ShowMessage("❌ Invalid selection. Please choose '1' or '2'.")
 						console.ShowContinue()
 						continue
 					}
 
-					// Artikelmenge aktualisieren
+					// Update item quantity
 					err := models.UpdateItem(rowId-1, *item)
 					if err != nil {
 						console.ShowError(err)
 					} else {
-						console.ShowMessage(fmt.Sprintf("Neue Bestand: %d Stück", item.Quantity))
-						console.ShowMessage("✅ Artikelmenge erfolgreich aktualisiert!")
+						console.ShowMessage(fmt.Sprintf("New stock: %d pieces", item.Quantity))
+						console.ShowMessage("✅ Item quantity successfully updated!")
 						console.ShowContinue()
 						console.Clear()
 						console.ShowExecuteCommandMenu()
@@ -222,10 +222,10 @@ func handleChangeQuantity() {
 					break
 
 				} else {
-					// Ungültige Eingabe, erneut fragen
+					// Invalid input, ask again
 					console.Clear()
 					console.ShowMessage(messageInvalidInput)
-					console.ShowMessage(fmt.Sprintf("Artikel: %s (%s) - %d Stück - Notizen: %s", item.ArticleName, item.ArticleNumber, item.Quantity, item.Note))
+					console.ShowMessage(fmt.Sprintf("Item: %s (%s) - %d pieces - Notes: %s", item.ArticleName, item.ArticleNumber, item.Quantity, item.Note))
 					console.ShowMessage(messageInvalidInputTryAgain)
 				}
 			}
@@ -234,7 +234,7 @@ func handleChangeQuantity() {
 }
 
 // Case 04
-// handleChanceArticleInformation bearbeitet einen Artikel im Inventar
+// handleChanceArticleInformation edits an item in the inventory
 func handleChanceArticleInformation() {
 	console.Clear()
 	items := models.GetAllItems()
@@ -252,7 +252,7 @@ func handleChanceArticleInformation() {
 
 		console.ShowAllItems(items[start:end], start)
 
-		choice := console.PageIndexPrompt("Artikel")
+		choice := console.PageIndexPrompt("Item")
 
 		exit, item, rowId := console.PageIndexUserInput(choice, &page, end, items)
 		if exit {
@@ -260,11 +260,11 @@ func handleChanceArticleInformation() {
 		}
 		if item != nil {
 
-			// Die Eingabewerte werden jetzt nur einmal initialisiert und bei Korrekturen wiederverwendet
-			console.ShowMessage(fmt.Sprintf("Aktuelle Artikelbezeichnung: %s", item.ArticleName))
+			// The input values are now initialized only once and reused for corrections
+			console.ShowMessage(fmt.Sprintf("Current item name: %s", item.ArticleName))
 			NewArticleName = console.AskForName(item.ArticleName, isEditing)
 
-			// Kategorien und Lieferanten laden
+			// Load categories and suppliers
 			selectedCategories, err := Category.ReadCategories(models.FileCategories)
 			if err != nil {
 				console.ShowError(err)
@@ -276,31 +276,31 @@ func handleChanceArticleInformation() {
 				return
 			}
 
-			// Kategorie auswählen
-			console.ShowMessage(fmt.Sprintf("Aktuelle Kategorie: %s", item.Category))
-			newCategory = selectItemWithCancel(selectedCategories, "Kategorie")
+			// Select category
+			console.ShowMessage(fmt.Sprintf("Current category: %s", item.Category))
+			newCategory = selectItemWithCancel(selectedCategories, "Category")
 			if newCategory == "" {
 				return
 			}
 
-			console.ShowMessage(fmt.Sprintf("Aktuelle Artikelnummer: %s", item.ArticleNumber))
+			console.ShowMessage(fmt.Sprintf("Current article number: %s", item.ArticleNumber))
 			newArticleNumber = console.AskForArticleNumber(item.ArticleNumber, isEditing)
 
-			// Lieferant auswählen
-			console.ShowMessage(fmt.Sprintf("Aktueller Lieferant: %s", item.Supplier))
-			newSupplier = selectItemWithCancel(selectedSuppliers, "Lieferant")
+			// Select supplier
+			console.ShowMessage(fmt.Sprintf("Current supplier: %s", item.Supplier))
+			newSupplier = selectItemWithCancel(selectedSuppliers, "Supplier")
 			if newSupplier == "" {
 				return
 			}
 
 			newQuantity := item.Quantity
 
-			console.ShowMessage(fmt.Sprintf("Aktuelle Notizen: %s", item.Note))
+			console.ShowMessage(fmt.Sprintf("Current notes: %s", item.Note))
 			newNotes = console.AskForNotes(item.Note, isEditing)
 
-			// Bestätigung zum Bearbeiten des Artikels
+			// Confirmation to edit the item
 			if handleConfirmItemDetails(NewArticleName, newCategory, newArticleNumber, newSupplier, newQuantity, newNotes) {
-				// Artikel aktualisieren
+				// Update item
 				data := models.Item{
 					ArticleName:   NewArticleName,
 					Category:      newCategory,
@@ -309,12 +309,12 @@ func handleChanceArticleInformation() {
 					Quantity:      newQuantity,
 					Note:          newNotes,
 				}
-				// Hier wird der Index korrekt angepasst
+				// Adjust the index correctly here
 				err := models.UpdateItem(rowId-1, data)
 				if err != nil {
 					console.ShowError(err)
 				} else {
-					console.ShowMessage("✅ Artikel erfolgreich aktualisiert!")
+					console.ShowMessage("✅ Item successfully updated!")
 					console.ShowContinue()
 					console.Clear()
 					console.ShowExecuteCommandMenu()
@@ -335,30 +335,30 @@ func selectItemWithCancel(items []string, itemType string) string {
 	return selectedItem
 }
 
-// confirmItemDetails is a method that is used to obtain confirmation from the user for the specified item details
+// handleConfirmItemDetails is a method that is used to obtain confirmation from the user for the specified item details
 func handleConfirmItemDetails(articleName, category, articleNumber, supplier string, quantity int, notes string) bool {
 	console.Clear()
-	console.ShowMessage("Bitte überprüfen Sie die neuen Daten:")
-	console.ShowMessage(fmt.Sprintf("Artikelbezeichnung: %s", articleName))
-	console.ShowMessage(fmt.Sprintf("Kategorie: %s", category))
-	console.ShowMessage(fmt.Sprintf("Artikelnummer: %s", articleNumber))
-	console.ShowMessage(fmt.Sprintf("Lieferant: %s", supplier))
-	console.ShowMessage(fmt.Sprintf("Menge: %d", quantity))
-	console.ShowMessage(fmt.Sprintf("Notizen: %s", notes))
-	console.ShowMessage("\nSind die Daten korrekt? (y/n) oder [c] um zum Hauptmenü zurückzukehren.")
+	console.ShowMessage("Please review the new data:")
+	console.ShowMessage(fmt.Sprintf("Item name: %s", articleName))
+	console.ShowMessage(fmt.Sprintf("Category: %s", category))
+	console.ShowMessage(fmt.Sprintf("Article number: %s", articleNumber))
+	console.ShowMessage(fmt.Sprintf("Supplier: %s", supplier))
+	console.ShowMessage(fmt.Sprintf("Quantity: %d", quantity))
+	console.ShowMessage(fmt.Sprintf("Notes: %s", notes))
+	console.ShowMessage("\nAre the details correct? (y/n) or [c] to return to the main menu.")
 
 	choice := console.AskForInput()
 	switch strings.ToLower(choice) {
 	case "y":
 		return true
 	case "n":
-		console.ShowMessage("✏️ Bitte korrigieren Sie die Daten.")
+		console.ShowMessage("✏️ Please correct the data.")
 		return false
 	case "c":
 		console.InputC()
 		return false
 	default:
-		console.ShowMessage("Ungültige Eingabe, bitte versuchen Sie es erneut.")
+		console.ShowMessage("Invalid input, please try again.")
 		return handleConfirmItemDetails(articleName, category, articleNumber, supplier, quantity, notes)
 	}
 }

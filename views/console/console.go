@@ -17,20 +17,21 @@ const (
 
 	ExitStatusCodeNoError int = 0
 	// ItemDetailsMessage or the output of article information.
-	ItemDetailsMessage = "Artikel: %s | Kategorie: %s (%s) | %d Stück | Notizen: %s"
+	ItemDetailsMessage = "Item: %s | Category: %s (%s) | %d pieces | Notes: %s"
 )
 
-// ShowAllItems shows all the available books in the library to the console
+// *ShowAllItems: Displays all items in the inventory with dynamically calculated column widths for better readability.
+// *ShowAllItems: Zeigt alle Artikel im Inventar mit dynamisch berechneten Spaltenbreiten für bessere Lesbarkeit an.
 func ShowAllItems(items []models.Item, startIndex int) {
-	// Berechnung der maximalen Länge für jede Spalte
-	maxArticleNameLen := len("Artikel-Bez.")
-	maxArticleCategoryLen := len("Kategorie")
-	maxArticleNumberLen := len("Artikel-Nr.")
-	maxSupplierLen := len("Lieferant")
-	manQuantityLen := len("Menge [Stk]")
-	maxNoteLen := len("Notizen")
+	// Calculate the maximum length for each column
+	maxArticleNameLen := len("Item Name")
+	maxArticleCategoryLen := len("Category")
+	maxArticleNumberLen := len("Item No.")
+	maxSupplierLen := len("Supplier")
+	maxQuantityLen := len("Quantity [pcs]")
+	maxNoteLen := len("Notes")
 
-	// Durchlaufen der Items, um die maximale Länge für jede Spalte zu finden
+	// Iterate through the items to find the maximum length for each column
 	for _, item := range items {
 		if len(item.ArticleName) > maxArticleNameLen {
 			maxArticleNameLen = len(item.ArticleName)
@@ -44,26 +45,26 @@ func ShowAllItems(items []models.Item, startIndex int) {
 		if len(item.Supplier) > maxSupplierLen {
 			maxSupplierLen = len(item.Supplier)
 		}
-		if len(fmt.Sprintf("%d", item.Quantity)) > manQuantityLen {
-			manQuantityLen = len(fmt.Sprintf("%d", item.Quantity))
+		if len(fmt.Sprintf("%d", item.Quantity)) > maxQuantityLen {
+			maxQuantityLen = len(fmt.Sprintf("%d", item.Quantity))
 		}
 		if len(item.Note) > maxNoteLen {
 			maxNoteLen = len(item.Note)
 		}
 	}
 
-	// Kopfzeile mit dynamisch berechneten Spaltenbreiten anzeigen
+	// Display header with dynamically calculated column widths
 	fmt.Printf("%5s | %-*s | %-*s | %-*s | %-*s | %-*s | %-*s |\n",
 		"ID",
-		maxArticleNameLen, "Artikel-Bez.",
-		maxArticleCategoryLen, "Kategorie",
-		maxArticleNumberLen, "Artikel-Nr.",
-		maxSupplierLen, "Lieferant",
-		manQuantityLen, "Menge [Stk]",
-		maxNoteLen, "Notizen")
-	ShowMessage(strings.Repeat("-", maxArticleNameLen+maxArticleCategoryLen+maxArticleNumberLen+maxSupplierLen+manQuantityLen+maxNoteLen+25))
+		maxArticleNameLen, "Item Name",
+		maxArticleCategoryLen, "Category",
+		maxArticleNumberLen, "Item No.",
+		maxSupplierLen, "Supplier",
+		maxQuantityLen, "Quantity [pcs]",
+		maxNoteLen, "Notes")
+	ShowMessage(strings.Repeat("-", maxArticleNameLen+maxArticleCategoryLen+maxArticleNumberLen+maxSupplierLen+maxQuantityLen+maxNoteLen+25))
 
-	// Artikel anzeigen mit fortlaufender ID
+	// Display items with sequential ID
 	for index, item := range items {
 		fmt.Printf("%5d | %-*s | %-*s | %-*s | %-*s | %-*d | %-*s |\n",
 			startIndex+index+1,
@@ -71,12 +72,13 @@ func ShowAllItems(items []models.Item, startIndex int) {
 			maxArticleCategoryLen, item.Category,
 			maxArticleNumberLen, item.ArticleNumber,
 			maxSupplierLen, item.Supplier,
-			manQuantityLen, item.Quantity,
+			maxQuantityLen, item.Quantity,
 			maxNoteLen, item.Note)
 	}
 }
 
-// AskForInput reads from console until line break is available and returns input
+// *AskForInput: Reads user input from the console until a line break is detected and returns the input.
+// *AskForInput: Liest die Benutzereingabe von der Konsole, bis ein Zeilenumbruch erkannt wird, und gibt die Eingabe zurück.
 func AskForInput() string {
 	reader := bufio.NewReader(os.Stdin)
 	response, err := reader.ReadString('\n')
@@ -84,21 +86,24 @@ func AskForInput() string {
 	return strings.TrimSpace(response)
 }
 
-// checkAndHandleError is used to check errors and handle them accordingly. In detail:
+// *checkAndHandleError: Checks for errors and handles them by displaying an error message.
+// *checkAndHandleError: Überprüft auf Fehler und behandelt sie, indem eine Fehlermeldung angezeigt wird.
 func checkAndHandleError(err error) {
 	if err != nil {
 		ShowError(err)
 	}
 }
 
-// ShowError shows the error to the console with the current timestamp
+// *ShowError: Displays the error message along with the current timestamp.
+// *ShowError: Zeigt die Fehlermeldung zusammen mit dem aktuellen Zeitstempel an.
 func ShowError(err error) {
 	if err != nil {
 		log.Println("error:", err.Error())
 	}
 }
 
-// Clear clears the console view
+// *Clear Clears the console screen.
+// *Clear Löscht den Konsolenbildschirm.
 func Clear() {
 	c := exec.Command("cmd", "/c", "cls")
 	c.Stdout = os.Stdout
@@ -106,57 +111,67 @@ func Clear() {
 	checkAndHandleError(err)
 }
 
-// ShowContinue shows the continuation information to the console
+// *ShowContinue: Prompts the user to press Enter to continue.
+// *ShowContinue:  Fordert den Benutzer auf, Enter zu drücken, um fortzufahren.
 func ShowContinue() {
-	ShowMessage("Drücken Sie [Enter], um fortzufahren...")
+	ShowMessage("Press [Enter] to continue...")
 	bufio.NewReader(os.Stdin).ReadString('\n')
 }
 
-// ShowGoodbye shows a goodbye message to the console
+// *ShowGoodbye: Displays a goodbye message.
+// *ShowGoodbye: Zeigt eine Abschiedsnachricht an.
 func ShowGoodbye() {
 	ShowMessage("Goodbye!")
 }
 
-// ShutDownNormal terminates the application with exit status code 0
+// *ShutDownNormal: Terminates the application with a normal exit status code.
+// *ShutDownNormal: Beendet die Anwendung mit einem normalen Exit-Status-Code.
 func ShutDownNormal() {
 	os.Exit(ExitStatusCodeNoError)
 }
 
-// ShowAddItemInformation shows the information and format about adding a Item
+// *ShowAddItemInformation: Displays instructions for adding a new item.
+// *ShowAddItemInformation: Zeigt Anweisungen zum Hinzufügen eines neuen Artikels an.
 func ShowAddItemInformation() {
-	ShowMessage("Bitte geben Sie die Artikeldaten ein:")
+	ShowMessage("Please enter the item details:")
 }
 
-// ShowMessage shows the message to the console
+// *ShowMessage: Displays a message on the console.
+// *ShowMessage: Zeigt eine Nachricht auf der Konsole an.
 func ShowMessage(message string) {
 	fmt.Println(message)
 }
 
+// *ConfirmTheArticle: Returns a formatted string with the details of the specified item.
+// *ConfirmTheArticle: Gibt eine formatierte Zeichenkette mit den Details des angegebenen Artikels zurück.
 func ConfirmTheArticle(item models.Item) string {
 	return fmt.Sprintf(ItemDetailsMessage, item.ArticleName, item.Category, item.ArticleNumber, item.Quantity, item.Note)
 }
 
-// InputC Displays the main menu and returns to it.
+// *InputC: Clears the screen and displays the main menu.
+// *InputC: Löscht den Bildschirm und zeigt das Hauptmenü an.
 func InputC() bool {
 	Clear()
 	ShowExecuteCommandMenu()
 	return true
 }
 
-// InputPageEnd Notifies the user and returns to the main menu.
+// *InputPageEnd: Notifies the user that all items have been displayed and returns to the main menu.
+// *InputPageEnd: Benachrichtigt den Benutzer, dass alle Artikel angezeigt wurden, und kehrt zum Hauptmenü zurück.
 func InputPageEnd() bool {
 	// Wenn es keine weiteren Artikel mehr gibt
-	ShowMessage("Alle Artikel wurden angezeigt.")
+	ShowMessage("All items have been displayed.")
 	ShowContinue()
 	Clear()
 	ShowExecuteCommandMenu()
 	return true
 }
 
-// ChecksInventory whether the inventory (items) is empty.
+// *ChecksInventory Checks if the inventory is empty and returns to the main menu if it is.
+// *ChecksInventory Überprüft, ob das Inventar leer ist, und kehrt zum Hauptmenü zurück, wenn es leer ist.
 func ChecksInventory() bool {
 	if len(models.GetAllItems()) == 0 {
-		ShowMessage("❌ Es sind keine Artikel vorhanden.")
+		ShowMessage("❌ No items available.")
 		ShowContinue()
 		Clear()
 		ShowExecuteCommandMenu()
@@ -165,14 +180,17 @@ func ChecksInventory() bool {
 	return false
 }
 
+// *HandleChancelAction: Displays a message that the item was not changed and returns to the main menu.
+// *HandleChancelAction: Zeigt eine Nachricht an, dass der Artikel nicht geändert wurde, und kehrt zum Hauptmenü zurück.
 func HandleChancelAction() bool {
-	ShowMessage("❌ Artikel wurde nicht geändert.")
+	ShowMessage("❌ Item was not changed.")
 	ShowContinue()
 	Clear()
 	return true
 }
 
-// PageIndexCalculate Calculates the start and end index for a page navigation, limited to the total number of elements.
+// *PageIndexCalculate: Calculates the start and end indices for pagination based on the current page and page size.
+// *PageIndexCalculate: Berechnet die Start- und Endindizes für die Seitennavigation basierend auf der aktuellen Seite und der Seitengröße.
 func PageIndexCalculate(page, pageSize, totalItems int) (int, int) {
 	start := page * pageSize
 	end := start + pageSize
@@ -182,32 +200,34 @@ func PageIndexCalculate(page, pageSize, totalItems int) (int, int) {
 	return start, end
 }
 
+// *PageIndexPrompt: Prompts the user to enter the ID of the item or navigate to the next page.
+// *PageIndexPrompt: Fordert den Benutzer auf, die ID des Artikels einzugeben oder zur nächsten Seite zu navigieren.
 func PageIndexPrompt(itemType string) string {
-	fmt.Printf("Gib die ID des %s ein, drücke [Enter] für nächste Seite oder [c], um zum Hauptmenü zurückzukehren.\n", itemType)
+	fmt.Printf("Enter the ID of the %s, press [Enter] for next page or [c] to return to the main menu.\n", itemType)
 	return AskForInput()
 }
 
-// PageIndexView Shows the prompt for scrolling or canceling
+// *PageIndexView: Prompts the user to press Enter for the next page or 'c' to cancel.
+// *PageIndexView: Fordert den Benutzer auf, Enter für die nächste Seite oder 'c' zum Abbrechen zu drücken.
 func PageIndexView() string {
-	ShowMessage("Drücke [Enter] für nächste seite oder [c], um zum Hauptmenü zurückzukehren.")
+	ShowMessage("Press [Enter] for next page or [c] to return to the main menu.")
 	return AskForInput()
 }
 
-// MessageGeneralInvalidID displays message with: Invalid ID. Please enter a valid ID
+// *MessageGeneralInvalidID: Displays a message indicating that the entered ID is invalid.
+// *MessageGeneralInvalidID: Zeigt eine Nachricht an, dass die eingegebene ID ungültig ist.
 func MessageGeneralInvalidID() {
-	ShowMessage("❌ Ungültige ID. Bitte gib eine gültige ID ein.")
+	ShowMessage("❌ Invalid ID. Please enter a valid ID.")
 }
 
-// MessageGeneralNotEmpty displays an error message indicating that a field cannot be empty.
+// MessageGeneralNotEmpty: Displays an error message indicating that the specified field cannot be empty.
+// MessageGeneralNotEmpty: Zeigt eine Fehlermeldung an, dass das angegebene Feld nicht leer sein darf.
 func MessageGeneralNotEmpty(fieldName string) {
-	fmt.Printf("%s darf nicht leer sein.\n", fieldName)
+	fmt.Printf("%s cannot be empty.\n", fieldName)
 }
 
-func MessageSelectIDPrompt() {
-	ShowMessage("Bitte wählen Sie eine ID aus der Liste")
-}
-
-// PageIndexUserInput Processes the user input for editing, scrolling or canceling
+// *PageIndexUserInput: Processes user input for editing an item, navigating pages, or canceling the action.
+// *PageIndexUserInput: Verarbeitet die Benutzereingabe zum Bearbeiten eines Artikels, zum Navigieren durch Seiten oder zum Abbrechen der Aktion.
 func PageIndexUserInput(choice string, page *int, end int, items []models.Item) (bool, *models.Item, int) {
 	if strings.ToLower(choice) == "c" {
 		Clear()
@@ -233,40 +253,45 @@ func PageIndexUserInput(choice string, page *int, end int, items []models.Item) 
 	return false, nil, 0
 }
 
-// AskForName allows input for the item name, with an optional previous value if editing
+// *AskForName: Prompts the user to enter the item name, with an optional default value if editing.
+// *AskForName: Fordert den Benutzer auf, den Artikelnamen einzugeben, mit einem optionalen Standardwert, wenn bearbeitet wird.
 func AskForName(defaultValue string, isEditing bool) string {
-	return askForInput("Artikelbezeichnung", defaultValue, isEditing, func(input string) bool {
+	return askForInput("Item name", defaultValue, isEditing, func(input string) bool {
 		return input != ""
 	})
 }
 
-// AskForCategory allows input for the category, with an optional previous value if editing
+// *AskForArticleNumber: Prompts the user to enter the category, with an optional default value if editing.
+// *AskForArticleNumber: Fordert den Benutzer auf, die Kategorie einzugeben, mit einem optionalen Standardwert, wenn bearbeitet wird.
 func AskForCategory(defaultValue string, isEditing bool) string {
-	return askForInput("Kategorie", defaultValue, isEditing, func(input string) bool {
+	return askForInput("Category", defaultValue, isEditing, func(input string) bool {
 		return input != ""
 	})
 }
 
-// AskForArticleNumber allows input for the item number, with an optional previous value if editing
+// *AskForArticleNumber: Prompts the user to enter the item number, with an optional default value if editing.
+// *AskForArticleNumber: Fordert den Benutzer auf, die Artikelnummer
 func AskForArticleNumber(defaultValue string, isEditing bool) string {
-	return askForInput("Artikelnummer", defaultValue, isEditing, func(input string) bool {
+	return askForInput("Item number", defaultValue, isEditing, func(input string) bool {
 		return input != ""
 	})
 }
 
-// AskForSupplier allows input for the supplier, with an optional previous value if editing
+// *AskForSupplier: Prompts the user to enter the supplier, with an optional default value if editing.
+// *AskForSupplier: Fordert den Benutzer auf, den Lieferanten einzugeben, mit einem optionalen Standardwert, wenn bearbeitet wird.
 func AskForSupplier(defaultValue string, isEditing bool) string {
-	return askForInput("Lieferant", defaultValue, isEditing, func(input string) bool {
+	return askForInput("Supplier", defaultValue, isEditing, func(input string) bool {
 		return input != ""
 	})
 }
 
-// AskForQuantity allows input for the item quantity, with an optional previous value if editing
+// *AskForQuantity: Prompts the user to enter the item quantity, with an optional default value if editing.
+// *AskForQuantity: Fordert den Benutzer auf, die Menge des Artikels einzugeben, mit einem optionalen Standardwert, wenn bearbeitet wird.
 func AskForQuantity(defaultValue int, isEditing bool) int {
 	for {
-		prompt := "Menge"
+		prompt := "Quantity"
 		if isEditing && defaultValue >= 0 {
-			ShowMessage(fmt.Sprintf("* %s [Eingegeben: %d]:", prompt, defaultValue))
+			ShowMessage(fmt.Sprintf("* %s [Entered: %d]:", prompt, defaultValue))
 		} else {
 			ShowMessage(fmt.Sprintf("* %s:", prompt))
 		}
@@ -285,49 +310,52 @@ func AskForQuantity(defaultValue int, isEditing bool) int {
 		if quantity >= 0 {
 			return quantity
 		} else {
-			ShowMessage("⚠️ Menge muss eine positive Zahl sein. Bitte versuchen Sie es erneut.")
+			ShowMessage("⚠️ Quantity must be a positive number. Please try again.")
 		}
 	}
 }
 
-// AskForNotes allows input for optional notes, with an optional previous value if editing
+// *AskForNotes: Prompts the user to enter optional notes, with an optional default value if editing.
+// *AskForNotes: Fordert den Benutzer auf, optionale Notizen einzugeben, mit einem optionalen Standardwert, wenn bearbeitet wird.
 func AskForNotes(defaultValue string, isEditing bool) string {
 	if isEditing && defaultValue != "" {
-		ShowMessage(fmt.Sprintf("Eingegeben: (%s)\n\"Enter\" übernehmen, \"Leertaste\" löschen\n * Notizen:", defaultValue))
+		ShowMessage(fmt.Sprintf("Entered: (%s)\n\"Enter\" to keep, \"Space\" to clear\n * Notes:", defaultValue))
 	} else {
-		ShowMessage("* Notizen (optional):")
+		ShowMessage("* Notes (optional):")
 	}
 
 	note := AskForInput()
 	if strings.TrimSpace(note) == "" {
-		return "" // Leert das Feld, wenn nur Leerzeichen eingegeben wurden
+		return "" // Clear the field if only spaces were entered
 	} else if note == "" && defaultValue != "" {
-		return defaultValue // Verwende den alten Wert, wenn nichts eingegeben wurde
+		return defaultValue // Use the old value if nothing was entered
 	}
-	return note // Verwende die neue Eingabe
+	return note // Use the new input
 }
 
-// askForInput is a generic input handler for common input logic with validation.
+// *askForInput: A generic input handler for common input logic with validation.
+// *askForInput: Ein generischer Eingabe-Handler für allgemeine Eingabelogik mit Validierung.
 func askForInput(fieldName string, defaultValue string, isEditing bool, validate func(string) bool) string {
 	for {
 		if isEditing {
-			ShowMessage(fmt.Sprintf("* %s [Eingegeben: %s]:", fieldName, defaultValue))
+			ShowMessage(fmt.Sprintf("* %s [Entered: %s]:", fieldName, defaultValue))
 		} else {
 			ShowMessage(fmt.Sprintf("* %s:", fieldName))
 		}
 
 		input := AskForInput()
 		if input == "" && defaultValue != "" {
-			return defaultValue // Verwende den alten Wert, wenn nichts eingegeben wurde
+			return defaultValue // Use the old value if nothing was entered
 		} else if validate(input) {
-			return input // Verwende die neue Eingabe, wenn sie gültig ist
+			return input // Use the new input if it is valid
 		} else {
 			MessageGeneralNotEmpty(fieldName)
 		}
 	}
 }
 
-// SelectItem zeigt eine Auswahl in Seiten an und gibt das ausgewählte Element zurück
+// *SelectItem: Displays a paginated list of items and returns the selected item.
+// *SelectItem: Zeigt eine paginierte Liste von Artikeln an und gibt den ausgewählten Artikel zurück.
 func SelectItem(items []string, pageSize int, itemType string) string {
 	page := 0
 	totalPages := (len(items) + pageSize - 1) / pageSize
@@ -335,13 +363,13 @@ func SelectItem(items []string, pageSize int, itemType string) string {
 	for {
 		start, end := PageIndexCalculate(page, pageSize, len(items))
 
-		fmt.Printf("Bitte wählen Sie einen %s aus der Liste:\n", itemType)
+		fmt.Printf("Please select a %s from the list:\n", itemType)
 		for i := start; i < end; i++ {
 			fmt.Printf("%d: %s\n", i+1, items[i])
 		}
 
 		if totalPages > 1 {
-			fmt.Printf("Seite %d von %d.\n", page+1, totalPages)
+			fmt.Printf("Page %d of %d.\n", page+1, totalPages)
 		}
 
 		input := PageIndexPrompt(itemType)
@@ -349,7 +377,7 @@ func SelectItem(items []string, pageSize int, itemType string) string {
 
 		switch strings.ToLower(input) {
 		case "c":
-			ShowMessage("Aktion abgebrochen. Drücken Sie [Enter], um fortzufahren...")
+			ShowMessage("Action canceled. Press [Enter] to continue...")
 			return ""
 		case "":
 			page = (page + 1) % totalPages
@@ -374,12 +402,13 @@ func SelectItem(items []string, pageSize int, itemType string) string {
 //	return SelectItem(suppliers, pageSize, "Lieferant")
 //}
 
-// HandleAddSelectItem checks whether the user is in edit mode and displays the current selection before a new selection is made.
+// *HandleAddSelectItem: Checks if the user is in edit mode and displays the current selection before allowing a new selection.
+// *HandleAddSelectItem: Überprüft, ob der Benutzer im Bearbeitungsmodus ist, und zeigt die aktuelle Auswahl an, bevor eine neue Auswahl getroffen wird.
 func HandleAddSelectItem(currentItem string, items []string, itemType string, isEditing bool) string {
 	if !isEditing {
 		return SelectItem(items, PageSize, itemType)
 	} else {
-		ShowMessage(fmt.Sprintf("Aktuelle: %s", currentItem))
+		ShowMessage(fmt.Sprintf("Current: %s", currentItem))
 		newItem := SelectItem(items, PageSize, itemType)
 		if newItem != "" {
 			return newItem
