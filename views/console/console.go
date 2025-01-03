@@ -476,7 +476,7 @@ func ErrorMessage(message string) {
 
 // GetPageInput waits for the user to press Enter or type 'c' to cancel
 func GetPageInput() string {
-	fmt.Print("Press Enter to continue or 'c' to cancel:\n")
+	fmt.Print("Press [Enter] for next page or [c] to return to the service menu\n")
 	reader := bufio.NewReader(os.Stdin)
 	input, _ := reader.ReadString('\n')
 	return strings.TrimSpace(input)
@@ -484,7 +484,7 @@ func GetPageInput() string {
 
 // ShowOnlyCancelMessage displays a message indicating that only 'c' can be pressed to return to the service menu
 func ShowOnlyCancelMessage() string {
-	fmt.Println("Press 'c' to continue to the service menu:")
+	fmt.Println("Press [c] to continue to the service menu:")
 	reader := bufio.NewReader(os.Stdin)
 	input, _ := reader.ReadString('\n')
 	return strings.TrimSpace(input)
