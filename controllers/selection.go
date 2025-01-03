@@ -28,6 +28,10 @@ func executeCommand() {
 	//	// TODO: Funktionalität implementieren
 	case "9":
 		handleViewItems()
+	case "9D":
+		handleViewDeletedItems()
+	case "9A":
+		handleViewAllItems()
 	case "4600":
 		console.Clear()
 		hiddenCommand()

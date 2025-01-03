@@ -22,7 +22,7 @@ const (
 
 // *ShowAllItems: Displays all items in the inventory with dynamically calculated column widths for better readability.
 // *ShowAllItems: Zeigt alle Artikel im Inventar mit dynamisch berechneten Spaltenbreiten für bessere Lesbarkeit an.
-func ShowAllItems(items []models.Item, startIndex int) {
+func ShowAllItems(items []models.Item, startIndex int, showDeletedDate bool) {
 	// Calculate the maximum length for each column
 	maxArticleNameLen := len("Item Name")
 	maxArticleCategoryLen := len("Category")
@@ -30,6 +30,7 @@ func ShowAllItems(items []models.Item, startIndex int) {
 	maxSupplierLen := len("Supplier")
 	maxQuantityLen := len("Quantity [pcs]")
 	maxNoteLen := len("Notes")
+	maxDeleteDateLen := len("Deleted At")
 
 	// Iterate through the items to find the maximum length for each column
 	for _, item := range items {
@@ -51,29 +52,64 @@ func ShowAllItems(items []models.Item, startIndex int) {
 		if len(item.Note) > maxNoteLen {
 			maxNoteLen = len(item.Note)
 		}
+		if showDeletedDate && item.DeleteDate != nil {
+			formattedDate := item.DeleteDate.Format("02. 01. 2006 / 15:04")
+			if len(formattedDate) > maxDeleteDateLen {
+				maxDeleteDateLen = len(formattedDate)
+			}
+		}
 	}
 
 	// Display header with dynamically calculated column widths
-	fmt.Printf("%5s | %-*s | %-*s | %-*s | %-*s | %-*s | %-*s |\n",
-		"ID",
-		maxArticleNameLen, "Item Name",
-		maxArticleCategoryLen, "Category",
-		maxArticleNumberLen, "Item No.",
-		maxSupplierLen, "Supplier",
-		maxQuantityLen, "Quantity [pcs]",
-		maxNoteLen, "Notes")
-	ShowMessage(strings.Repeat("-", maxArticleNameLen+maxArticleCategoryLen+maxArticleNumberLen+maxSupplierLen+maxQuantityLen+maxNoteLen+25))
+	if showDeletedDate {
+		fmt.Printf("%5s | %-*s | %-*s | %-*s | %-*s | %-*s | %-*s | %-*s |\n",
+			"ID",
+			maxArticleNameLen, "Item Name",
+			maxArticleCategoryLen, "Category",
+			maxArticleNumberLen, "Item No.",
+			maxSupplierLen, "Supplier",
+			maxQuantityLen, "Quantity [pcs]",
+			maxNoteLen, "Notes",
+			maxDeleteDateLen, "Deleted At")
+		ShowMessage(strings.Repeat("-", maxArticleNameLen+maxArticleCategoryLen+maxArticleNumberLen+maxSupplierLen+maxQuantityLen+maxNoteLen+maxDeleteDateLen+35))
+	} else {
+		fmt.Printf("%5s | %-*s | %-*s | %-*s | %-*s | %-*s | %-*s |\n",
+			"ID",
+			maxArticleNameLen, "Item Name",
+			maxArticleCategoryLen, "Category",
+			maxArticleNumberLen, "Item No.",
+			maxSupplierLen, "Supplier",
+			maxQuantityLen, "Quantity [pcs]",
+			maxNoteLen, "Notes")
+		ShowMessage(strings.Repeat("-", maxArticleNameLen+maxArticleCategoryLen+maxArticleNumberLen+maxSupplierLen+maxQuantityLen+maxNoteLen+25))
+	}
 
 	// Display items with sequential ID
 	for index, item := range items {
-		fmt.Printf("%5d | %-*s | %-*s | %-*s | %-*s | %-*d | %-*s |\n",
-			startIndex+index+1,
-			maxArticleNameLen, item.ArticleName,
-			maxArticleCategoryLen, item.Category,
-			maxArticleNumberLen, item.ArticleNumber,
-			maxSupplierLen, item.Supplier,
-			maxQuantityLen, item.Quantity,
-			maxNoteLen, item.Note)
+		if showDeletedDate {
+			var deleteDate string
+			if item.DeleteDate != nil {
+				deleteDate = item.DeleteDate.Format("02. 01. 2006 / 15:04")
+			}
+			fmt.Printf("%5d | %-*s | %-*s | %-*s | %-*s | %-*d | %-*s | %-*s |\n",
+				startIndex+index+1,
+				maxArticleNameLen, item.ArticleName,
+				maxArticleCategoryLen, item.Category,
+				maxArticleNumberLen, item.ArticleNumber,
+				maxSupplierLen, item.Supplier,
+				maxQuantityLen, item.Quantity,
+				maxNoteLen, item.Note,
+				maxDeleteDateLen, deleteDate)
+		} else {
+			fmt.Printf("%5d | %-*s | %-*s | %-*s | %-*s | %-*d | %-*s |\n",
+				startIndex+index+1,
+				maxArticleNameLen, item.ArticleName,
+				maxArticleCategoryLen, item.Category,
+				maxArticleNumberLen, item.ArticleNumber,
+				maxSupplierLen, item.Supplier,
+				maxQuantityLen, item.Quantity,
+				maxNoteLen, item.Note)
+		}
 	}
 }
 
@@ -82,13 +118,13 @@ func ShowAllItems(items []models.Item, startIndex int) {
 func AskForInput() string {
 	reader := bufio.NewReader(os.Stdin)
 	response, err := reader.ReadString('\n')
-	checkAndHandleError(err)
+	CheckAndHandleError(err)
 	return strings.TrimSpace(response)
 }
 
-// *checkAndHandleError: Checks for errors and handles them by displaying an error message.
-// *checkAndHandleError: Überprüft auf Fehler und behandelt sie, indem eine Fehlermeldung angezeigt wird.
-func checkAndHandleError(err error) {
+// *CheckAndHandleError: Checks for errors and handles them by displaying an error message.
+// *CheckAndHandleError: Überprüft auf Fehler und behandelt sie, indem eine Fehlermeldung angezeigt wird.
+func CheckAndHandleError(err error) {
 	if err != nil {
 		ShowError(err)
 	}
@@ -108,7 +144,7 @@ func Clear() {
 	c := exec.Command("cmd", "/c", "cls")
 	c.Stdout = os.Stdout
 	err := c.Run()
-	checkAndHandleError(err)
+	CheckAndHandleError(err)
 }
 
 // *ShowContinue: Prompts the user to press Enter to continue.
@@ -253,16 +289,16 @@ func PageIndexUserInput(choice string, page *int, end int, items []models.Item) 
 	return false, nil, 0
 }
 
-// *AskForName: Prompts the user to enter the item name, with an optional default value if editing.
-// *AskForName: Fordert den Benutzer auf, den Artikelnamen einzugeben, mit einem optionalen Standardwert, wenn bearbeitet wird.
-func AskForName(defaultValue string, isEditing bool) string {
+// *AskForArticleName: Prompts the user to enter the item name, with an optional default value if editing.
+// *AskForArticleName: Fordert den Benutzer auf, den Artikelnamen einzugeben, mit einem optionalen Standardwert, wenn bearbeitet wird.
+func AskForArticleName(defaultValue string, isEditing bool) string {
 	return askForInput("Item name", defaultValue, isEditing, func(input string) bool {
 		return input != ""
 	})
 }
 
-// *AskForArticleNumber: Prompts the user to enter the category, with an optional default value if editing.
-// *AskForArticleNumber: Fordert den Benutzer auf, die Kategorie einzugeben, mit einem optionalen Standardwert, wenn bearbeitet wird.
+// *AskForCategory: Prompts the user to enter the category, with an optional default value if editing.
+// *AskForCategory: Fordert den Benutzer auf, die Kategorie einzugeben, mit einem optionalen Standardwert, wenn bearbeitet wird.
 func AskForCategory(defaultValue string, isEditing bool) string {
 	return askForInput("Category", defaultValue, isEditing, func(input string) bool {
 		return input != ""
@@ -425,6 +461,7 @@ func DisplaySuppliers(suppliers []string, start, end int) {
 	}
 }
 
+// ShowSuppliersList shows the list of items with their index and details
 func ShowSuppliersList(suppliers []string) {
 	fmt.Println("* Showing Existing Suppliers *")
 	for i, supplier := range suppliers {
@@ -437,11 +474,12 @@ func ShowNoSuppliersMessage() {
 	fmt.Println("List is empty. No supplier available.")
 }
 
+// ShowEndOfSupplier indicate the end of the displayed list
 func ShowEndOfSupplier() {
 	fmt.Println("End of supplier list reached.")
 }
 
-// DisplayCategories displays a paginated list of suppliers
+// DisplayCategories displays a paginated list of categories
 func DisplayCategories(suppliers []string, start, end int) {
 	fmt.Println("* Available Categories:")
 	for i := start; i < end && i < len(suppliers); i++ {
@@ -449,6 +487,7 @@ func DisplayCategories(suppliers []string, start, end int) {
 	}
 }
 
+// ShowCategoriesList shows the list of items with their index and details
 func ShowCategoriesList(Categories []string) {
 	fmt.Println("* Showing Existing Categories *")
 	for i, category := range Categories {
@@ -456,11 +495,12 @@ func ShowCategoriesList(Categories []string) {
 	}
 }
 
-// ShowNoCategoriesMessage displays a message when no Category are available
+// ShowNoCategoriesMessage displays a message when no category are available
 func ShowNoCategoriesMessage() {
 	fmt.Println("List is empty. No Category available.")
 }
 
+// ShowEndOfCategory indicate the end of the displayed list
 func ShowEndOfCategory() {
 	fmt.Println("End of Category list reached.")
 }
@@ -470,8 +510,9 @@ func ErrorMessage(message string) {
 	fmt.Println("Error:", message)
 }
 
+// GetPageInput waits for the user to press Enter or type 'c' to cancel
 func GetPageInput() string {
-	fmt.Print("Press Enter to continue or 'c' to cancel:\n")
+	fmt.Print("Press [Enter] for next page or [c] to return to the service menu\n")
 	reader := bufio.NewReader(os.Stdin)
 	input, _ := reader.ReadString('\n')
 	return strings.TrimSpace(input)
@@ -479,16 +520,18 @@ func GetPageInput() string {
 
 // ShowOnlyCancelMessage displays a message indicating that only 'c' can be pressed to return to the service menu
 func ShowOnlyCancelMessage() string {
-	fmt.Println("Press 'c' to continue to the service menu:")
+	fmt.Println("Press [c] to continue to the service menu:")
 	reader := bufio.NewReader(os.Stdin)
 	input, _ := reader.ReadString('\n')
 	return strings.TrimSpace(input)
 }
 
+// ShowPrompt displays a message to prompt the user for input
 func ShowPrompt(message string) {
 	fmt.Println(message)
 }
 
+// GetUserInput reads and trims the user input from the console
 func GetUserInput() string {
 	reader := bufio.NewReader(os.Stdin)
 	input, _ := reader.ReadString('\n')

@@ -10,6 +10,7 @@ import (
 	"reflect"
 	"strconv"
 	"strings"
+	"time"
 )
 
 // Item as type
@@ -21,6 +22,8 @@ type Item struct {
 	Manufacturer  string
 	Quantity      int
 	Note          string
+	DeleteDate    *time.Time
+	IsDeleted     bool
 }
 
 type Supplier struct {
@@ -28,6 +31,28 @@ type Supplier struct {
 }
 type Category struct {
 	CategoryName string
+}
+
+// GetActiveItems returns a slice of items that are not deleted.
+func GetActiveItems(items []Item) []Item {
+	var activeItems []Item
+	for _, item := range items {
+		if !item.IsDeleted {
+			activeItems = append(activeItems, item)
+		}
+	}
+	return activeItems
+}
+
+// GetDeletedItems returns a slice of items that are deleted.
+func GetDeletedItems(items []Item) []Item {
+	var deletedItems []Item
+	for _, item := range items {
+		if item.IsDeleted {
+			deletedItems = append(deletedItems, item)
+		}
+	}
+	return deletedItems
 }
 
 // *StringToInt: Converts a string to an integer.
@@ -110,6 +135,15 @@ func ParseItemFromCsvStringList(record []string) (Item, error) {
 		return parsedItem, err
 	}
 
+	var deleteDate *time.Time
+	if record[7] != "" {
+		parsedTime, err := time.Parse(time.RFC3339, record[7])
+		if err != nil {
+			return parsedItem, err
+		}
+		deleteDate = &parsedTime
+	}
+
 	// Create new book based on parsed values
 	parsedItem = Item{
 		ArticleName:   strings.TrimSpace(record[0]),
@@ -119,6 +153,8 @@ func ParseItemFromCsvStringList(record []string) (Item, error) {
 		Manufacturer:  strings.TrimSpace(record[4]),
 		Quantity:      StringToInt(record[5]), // Menge als int
 		Note:          strings.TrimSpace(record[6]),
+		DeleteDate:    deleteDate,
+		IsDeleted:     record[8] == "true",
 	}
 
 	return parsedItem, nil
@@ -127,7 +163,12 @@ func ParseItemFromCsvStringList(record []string) (Item, error) {
 // *getItemAsStringSlice: Converts an Item to a slice of strings.
 // *getItemAsStringSlice: Konvertiert ein Item in ein String-Array.
 func getItemAsStringSlice(item Item) []string {
-	bookSerialized := []string{
+	var deleteDate string
+	if item.DeleteDate != nil {
+		deleteDate = item.DeleteDate.Format(time.RFC3339)
+	}
+
+	itemSerialized := []string{
 		item.ArticleName,
 		item.Category,
 		item.ArticleNumber,
@@ -135,16 +176,18 @@ func getItemAsStringSlice(item Item) []string {
 		item.Manufacturer,
 		IntToString(item.Quantity),
 		item.Note,
+		deleteDate,
+		strconv.FormatBool(item.IsDeleted),
 	}
 
-	return bookSerialized
+	return itemSerialized
 }
 
 // *UpdateItem: Updates an item in the inventory.
 // *UpdateItem: aktualisiert einen Artikel im Inventar
 func UpdateItem(id int, updatedItem Item) error {
 	if id < 0 || id >= len(items) {
-		return errors.New("ungültige ID")
+		return errors.New("invalid ID")
 	}
 
 	items[id] = updatedItem
@@ -223,23 +266,18 @@ func GetAllItems() []Item {
 // *RemoveItem: Entfernt die übergebene Zeilen-ID aus dem Inventar.
 func RemoveItem(rowId int) error {
 	// input validation
-	if rowId < 1 {
-		fmt.Printf("row Id %d in wrong data range, value must >= 1", rowId)
+	if rowId < 1 || rowId > len(items) {
+		return fmt.Errorf("row Id %d in wrong data range, value must be between 1 and %d", rowId, len(items))
 	}
-	// Temporary slice variable
-	var tempItems []Item
-	// Normalize rot ID
+
+	// Normalize row ID
 	rowIdNormed := rowId - 1
-	//loop through existing slice and add all item except the removing one
-	for index, value := range items {
-		if index != rowIdNormed {
-			tempItems = append(tempItems, value)
-		}
-	}
-	// Assign temporary slice to existing package slice variable
-	items = tempItems
+
+	// Mark the item as deleted and set the deletion date
+	now := time.Now()
+	items[rowIdNormed].IsDeleted = true
+	items[rowIdNormed].DeleteDate = &now
 
 	// Update data in file
-	err := updateDataInFile()
-	return err
+	return updateDataInFile()
 }

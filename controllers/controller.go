@@ -20,20 +20,12 @@ const (
 
 // Run does the running of the console application
 func Run() {
-	checkAndHandleError(models.Initialize())
+	console.CheckAndHandleError(models.Initialize())
 	console.Clear()
 	console.ShowExecuteCommandMenu()
 
 	for {
 		executeCommand()
-	}
-}
-
-// checkAndHandleError Checks whether there is an error and displays it if present. Used for centralized error handling.
-func checkAndHandleError(err error) {
-	if err != nil {
-		console.ShowError(err)
-		return
 	}
 }
 
@@ -59,7 +51,7 @@ func handleAddItem() {
 	}
 
 	for {
-		articleName = console.AskForName(articleName, isEditing)
+		articleName = console.AskForArticleName(articleName, isEditing)
 		chosenCategory = console.HandleAddSelectItem(chosenCategory, selectedCategories, "Category", isEditing)
 		if chosenCategory == "" {
 			return
@@ -110,7 +102,7 @@ func handleRemoveItem() {
 	for {
 		start, end := console.PageIndexCalculate(page, pageSize, len(items))
 
-		console.ShowAllItems(items[start:end], start)
+		console.ShowAllItems(items[start:end], start, false) // showDeletedDate = false
 
 		choice := console.PageIndexPrompt("Item")
 
@@ -129,7 +121,7 @@ func handleRemoveItem() {
 					if err != nil {
 						console.ShowError(err)
 					} else {
-						console.ShowMessage("✅ Item successfully removed!")
+						console.ShowMessage("✅ Item successfully marked as deleted!")
 						console.ShowContinue()
 						console.Clear()
 						console.ShowExecuteCommandMenu()
@@ -139,7 +131,7 @@ func handleRemoveItem() {
 					console.HandleChancelAction()
 					break
 				} else {
-					// Ungültige Eingabe, erneut fragen
+					// Invalid input, ask again
 					console.Clear()
 					console.ShowMessage(messageInvalidInput)
 					console.ShowMessage(fmt.Sprintf("Item: %s (%s) - %d pieces - Notes: %s", item.ArticleName, item.ArticleNumber, item.Quantity, item.Note))
@@ -156,6 +148,8 @@ func handleChangeQuantity() {
 	console.Clear()
 	items := models.GetAllItems()
 
+	activeItems := models.GetActiveItems(items)
+
 	if console.ChecksInventory() {
 		return
 	}
@@ -164,7 +158,7 @@ func handleChangeQuantity() {
 	for {
 		start, end := console.PageIndexCalculate(page, pageSize, len(items))
 
-		console.ShowAllItems(items[start:end], start)
+		console.ShowAllItems(activeItems[start:end], start, false) // showDeletedDate = false
 
 		choice := console.PageIndexPrompt("Item")
 
@@ -238,6 +232,7 @@ func handleChangeQuantity() {
 func handleChanceArticleInformation() {
 	console.Clear()
 	items := models.GetAllItems()
+	activeItems := models.GetActiveItems(items)
 
 	if console.ChecksInventory() {
 		return
@@ -250,7 +245,7 @@ func handleChanceArticleInformation() {
 
 		start, end := console.PageIndexCalculate(page, pageSize, len(items))
 
-		console.ShowAllItems(items[start:end], start)
+		console.ShowAllItems(activeItems[start:end], start, false) // showDeletedDate = false
 
 		choice := console.PageIndexPrompt("Item")
 
@@ -262,7 +257,7 @@ func handleChanceArticleInformation() {
 
 			// The input values are now initialized only once and reused for corrections
 			console.ShowMessage(fmt.Sprintf("Current item name: %s", item.ArticleName))
-			NewArticleName = console.AskForName(item.ArticleName, isEditing)
+			NewArticleName = console.AskForArticleName(item.ArticleName, isEditing)
 
 			// Load categories and suppliers
 			selectedCategories, err := Category.ReadCategories(models.FileCategories)
@@ -364,8 +359,73 @@ func handleConfirmItemDetails(articleName, category, articleNumber, supplier str
 }
 
 // Case 09
-// handleViewItems Displays all items in the inventory.
+// *handleViewItems Shows all items that have not been deleted.
+// *handleViewItems: Zeigt alle Gegenstände die nicht gelöscht sind.
 func handleViewItems() {
+	console.Clear()
+	items := models.GetAllItems()
+
+	activeItems := models.GetActiveItems(items)
+
+	if len(activeItems) == 0 {
+		console.ShowMessage("❌ No items available.")
+		console.ShowContinue()
+		console.Clear()
+		console.ShowExecuteCommandMenu()
+		return
+	}
+
+	page := InitialPage
+	for {
+		start, end := console.PageIndexCalculate(page, pageSize, len(activeItems))
+		console.ShowAllItems(activeItems[start:end], start, false) // showDeletedDate = false
+		choice := console.PageIndexView()
+		if choice == "c" {
+			console.InputC()
+			return
+		} else if choice == "" {
+			page++
+			if end == len(activeItems) {
+				console.InputPageEnd()
+				return
+			}
+		}
+	}
+}
+
+// *handleViewDeletedItems: Shows all items that have been deleted
+// *handleViewDeletedItems: Zeigt alle Gegenstände die gelöscht sind
+func handleViewDeletedItems() {
+	console.Clear()
+	items := models.GetAllItems()
+
+	deletedItems := models.GetDeletedItems(items)
+
+	if console.ChecksInventory() {
+		return
+	}
+
+	page := InitialPage
+	for {
+		start, end := console.PageIndexCalculate(page, pageSize, len(deletedItems))
+		console.ShowAllItems(deletedItems[start:end], start, true) // showDeletedDate = true
+		choice := console.PageIndexView()
+		if choice == "c" {
+			console.InputC()
+			return
+		} else if choice == "" {
+			page++
+			if end == len(deletedItems) {
+				console.InputPageEnd()
+				return
+			}
+		}
+	}
+}
+
+// *handleViewAllItems: Shows all deleted and undeleted items
+// *handleViewAllItems: Zeigt alle gelöschte und nicht gelöschte Gegenstände
+func handleViewAllItems() {
 	console.Clear()
 	items := models.GetAllItems()
 
@@ -374,14 +434,10 @@ func handleViewItems() {
 	}
 
 	page := InitialPage
-
 	for {
 		start, end := console.PageIndexCalculate(page, pageSize, len(items))
-
-		console.ShowAllItems(items[start:end], start)
-
+		console.ShowAllItems(items[start:end], start, true) // showDeletedDate = true
 		choice := console.PageIndexView()
-
 		if choice == "c" {
 			console.InputC()
 			return
@@ -455,7 +511,7 @@ func handleAddSuppliers() {
 		console.ShowSuppliersList(suppliers) // Display the suppliers
 
 		// Prompt for new supplier
-		console.ShowPrompt("Enter the name of the supplier you want to add (or 'C' to cancel):")
+		console.ShowMessage("Enter the name of the supplier you want to add (or 'C' to cancel):")
 		supplierName := console.GetUserInput()
 
 		if supplierName == "C" || supplierName == "c" {
@@ -493,7 +549,7 @@ func handleDeleteSupplier() {
 		console.ShowSuppliersList(suppliers) // Display the suppliers
 
 		// Prompt user to select a supplier to delete
-		console.ShowPrompt("Enter the number of the supplier you want to delete (or 'C' to cancel):")
+		console.ShowMessage("Enter the number of the supplier you want to delete (or 'C' to cancel):")
 		input := console.GetUserInput()
 
 		if input == "C" || input == "c" {
@@ -580,7 +636,7 @@ func handleAddCategories() {
 		console.ShowCategoriesList(categories) // Display the categories
 
 		// Prompt for new supplier
-		console.ShowPrompt("Enter the name of the category you want to add (or 'C' to cancel):")
+		console.ShowMessage("Enter the name of the category you want to add (or 'C' to cancel):")
 		categoryName := console.GetUserInput()
 
 		if categoryName == "C" || categoryName == "c" {
@@ -618,7 +674,7 @@ func handleDeleteCategories() {
 		console.ShowCategoriesList(categories) // Display the categories
 
 		// Prompt user to select a category to delete
-		console.ShowPrompt("Enter the number of the category you want to delete (or 'C' to cancel):")
+		console.ShowMessage("Enter the number of the category you want to delete (or 'C' to cancel):")
 		input := console.GetUserInput()
 
 		if input == "C" || input == "c" {
