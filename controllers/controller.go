@@ -53,12 +53,12 @@ func handleAddItem() {
 	for {
 		articleName = console.AskForArticleName(articleName, isEditing)
 		chosenCategory = console.HandleAddSelectItem(chosenCategory, selectedCategories, "Category", isEditing)
-		if chosenCategory == "" {
+		if chosenCategory == "C" {
 			return
 		}
 		articleNumber = console.AskForArticleNumber(articleNumber, isEditing)
 		chosenSupplier = console.HandleAddSelectItem(chosenSupplier, selectedSuppliers, "Supplier", isEditing)
-		if chosenSupplier == "" {
+		if chosenSupplier == "C" {
 			return
 		}
 		quantity = console.AskForQuantity(quantity, isEditing)

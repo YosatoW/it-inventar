@@ -19,7 +19,6 @@ type Item struct {
 	Category      string
 	ArticleNumber string
 	Supplier      string
-	Manufacturer  string
 	Quantity      int
 	Note          string
 	DeleteDate    *time.Time
@@ -150,11 +149,10 @@ func ParseItemFromCsvStringList(record []string) (Item, error) {
 		Category:      strings.TrimSpace(record[1]),
 		ArticleNumber: strings.TrimSpace(record[2]),
 		Supplier:      strings.TrimSpace(record[3]),
-		Manufacturer:  strings.TrimSpace(record[4]),
-		Quantity:      StringToInt(record[5]), // Menge als int
-		Note:          strings.TrimSpace(record[6]),
+		Quantity:      StringToInt(record[4]), // Menge als int
+		Note:          strings.TrimSpace(record[5]),
 		DeleteDate:    deleteDate,
-		IsDeleted:     record[8] == "true",
+		IsDeleted:     record[6] == "true",
 	}
 
 	return parsedItem, nil
@@ -173,7 +171,6 @@ func getItemAsStringSlice(item Item) []string {
 		item.Category,
 		item.ArticleNumber,
 		item.Supplier,
-		item.Manufacturer,
 		IntToString(item.Quantity),
 		item.Note,
 		deleteDate,
@@ -224,8 +221,9 @@ const FileCategories = "categories.csv"
 const FileSupplier = "supplier.csv"
 
 var items []Item
-var suppliers []Supplier
-var categories []Category
+
+//var suppliers []Supplier
+//var categories []Category
 
 // *AddItem: adds the passed Item to the Inventory
 // *AddItem: Fügt den übergebenen Artikel dem Inventar hinzu.
@@ -247,10 +245,10 @@ func Initialize() error {
 		return err
 	}
 	// Initialisieren Lieferanten
-	suppliers, err = getDataFromSupplierFile()
-	if err != nil {
-		return err
-	}
+	//suppliers, err = getDataFromSupplierFile()
+	//if err != nil {
+	//	return err
+	//}
 	return nil
 }
 

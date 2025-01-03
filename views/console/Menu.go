@@ -8,16 +8,17 @@ func ShowExecuteCommandMenu() {
 	###########################################
 	#******** WELCOME TO OUR INVENTORY ********
 	#******** CHOOSE YOUR OPTION BELOW ********
-	# 1. Add article
-	# 2. Delete article
-	# 3. Article booking
-	# 4. Change article information
+	# -1- Add article
+	# -2- Delete article
+	# -3- Article booking
+	# -4- Change article information
 	#
+	# -9- Show active articles
+	# -9D- Show deleted articles
+	# -9a- Show all articles
 	#
-	# 9. Show article
-	#
-	# c. CLEAR VIEW AND SHOW MENU
-	# q. EXIT INVENTORY APP
+	# -C- CLEAR VIEW AND SHOW MENU
+	# -Q- EXIT INVENTORY APP
 	`)
 }
 
@@ -27,15 +28,16 @@ func ShowHiddenCommandMenu() {
 	###########################################
 	#****************  SERVICE *****************
 	#******** CHOOSE YOUR OPTION BELOW *********
-	# 1. Show suppliers
-	# 2. Add supplier
-	# 3. Delete supplier
+	# -1- Show suppliers
+	# -2- Add supplier
+	# -3- Delete supplier
 	#
-	# 11. Show categories
-	# 12. Add category
-	# 13. Delete category
+	# -11- Show categories
+	# -12- Add category
+	# -13- Delete category
 	#
-	#
-	# c. SHOW MAIN MENU
+
+
+	# -C- SHOW MAIN MENU
 	`)
 }

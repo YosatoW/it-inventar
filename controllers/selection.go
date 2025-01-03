@@ -8,7 +8,7 @@ import (
 
 // executeCommand asks the user for an input command and executes a corresponding function depending on the command
 func executeCommand() {
-	command := console.AskForInput()
+	command := strings.ToUpper(console.AskForInput())
 	switch command {
 	case "1":
 		handleAddItem()
@@ -18,14 +18,6 @@ func executeCommand() {
 		handleChangeQuantity()
 	case "4":
 		handleChanceArticleInformation()
-	//case "5":
-	//	// TODO: Funktionalität implementieren
-	//case "6":
-	//	// TODO: Funktionalität implementieren
-	//case "7":
-	//	// TODO: Funktionalität implementieren
-	//case "8":
-	//	// TODO: Funktionalität implementieren
 	case "9":
 		handleViewItems()
 	case "9D":
@@ -35,10 +27,10 @@ func executeCommand() {
 	case "4600":
 		console.Clear()
 		hiddenCommand()
-	case "c":
+	case "C":
 		console.Clear()
 		console.ShowExecuteCommandMenu()
-	case "q":
+	case "Q":
 		console.Clear()
 		console.ShowGoodbye()
 		console.ShutDownNormal()
@@ -64,7 +56,7 @@ func hiddenCommand() {
 	for {
 		console.ShowHiddenCommandMenu()
 
-		choice := console.AskForInput()
+		choice := strings.ToUpper(console.AskForInput())
 		if strings.TrimSpace(choice) == "" { // Leere Eingaben ignorieren
 			console.ShowMessage("⚠️ Empty input. Please choose a valid option.")
 			continue
@@ -83,7 +75,7 @@ func hiddenCommand() {
 		case "13":
 			fmt.Print()
 			handleDeleteCategories()
-		case "c":
+		case "C":
 			console.Clear()
 			console.ShowMessage("🔙 Exiting the Hidden Command Menu...")
 			console.ShowExecuteCommandMenu()

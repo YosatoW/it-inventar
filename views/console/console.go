@@ -53,7 +53,7 @@ func ShowAllItems(items []models.Item, startIndex int, showDeletedDate bool) {
 			maxNoteLen = len(item.Note)
 		}
 		if showDeletedDate && item.DeleteDate != nil {
-			formattedDate := item.DeleteDate.Format("02. 01. 2006 / 15:04")
+			formattedDate := item.DeleteDate.Format("02.01.2006 / 15:04")
 			if len(formattedDate) > maxDeleteDateLen {
 				maxDeleteDateLen = len(formattedDate)
 			}
@@ -89,7 +89,7 @@ func ShowAllItems(items []models.Item, startIndex int, showDeletedDate bool) {
 		if showDeletedDate {
 			var deleteDate string
 			if item.DeleteDate != nil {
-				deleteDate = item.DeleteDate.Format("02. 01. 2006 / 15:04")
+				deleteDate = item.DeleteDate.Format("02.01.2006 / 15:04")
 			}
 			fmt.Printf("%5d | %-*s | %-*s | %-*s | %-*s | %-*d | %-*s | %-*s |\n",
 				startIndex+index+1,
@@ -297,26 +297,10 @@ func AskForArticleName(defaultValue string, isEditing bool) string {
 	})
 }
 
-// *AskForCategory: Prompts the user to enter the category, with an optional default value if editing.
-// *AskForCategory: Fordert den Benutzer auf, die Kategorie einzugeben, mit einem optionalen Standardwert, wenn bearbeitet wird.
-func AskForCategory(defaultValue string, isEditing bool) string {
-	return askForInput("Category", defaultValue, isEditing, func(input string) bool {
-		return input != ""
-	})
-}
-
 // *AskForArticleNumber: Prompts the user to enter the item number, with an optional default value if editing.
 // *AskForArticleNumber: Fordert den Benutzer auf, die Artikelnummer
 func AskForArticleNumber(defaultValue string, isEditing bool) string {
 	return askForInput("Item number", defaultValue, isEditing, func(input string) bool {
-		return input != ""
-	})
-}
-
-// *AskForSupplier: Prompts the user to enter the supplier, with an optional default value if editing.
-// *AskForSupplier: Fordert den Benutzer auf, den Lieferanten einzugeben, mit einem optionalen Standardwert, wenn bearbeitet wird.
-func AskForSupplier(defaultValue string, isEditing bool) string {
-	return askForInput("Supplier", defaultValue, isEditing, func(input string) bool {
 		return input != ""
 	})
 }
@@ -414,7 +398,7 @@ func SelectItem(items []string, pageSize int, itemType string) string {
 		switch strings.ToLower(input) {
 		case "c":
 			ShowMessage("Action canceled. Press [Enter] to continue...")
-			return ""
+			return "C"
 		case "":
 			page = (page + 1) % totalPages
 		default:
@@ -428,16 +412,6 @@ func SelectItem(items []string, pageSize int, itemType string) string {
 	}
 }
 
-//// SelectCategory zeigt die Kategorienauswahl in Seiten an und gibt die ausgewählte Kategorie zurück
-//func SelectCategory(categories []string, pageSize int) string {
-//	return SelectItem(categories, pageSize, "Kategorie")
-//}
-//
-//// SelectSupplier zeigt die Lieferantenauswahl in Seiten an und gibt den ausgewählten Lieferanten zurück
-//func SelectSupplier(suppliers []string, pageSize int) string {
-//	return SelectItem(suppliers, pageSize, "Lieferant")
-//}
-
 // *HandleAddSelectItem: Checks if the user is in edit mode and displays the current selection before allowing a new selection.
 // *HandleAddSelectItem: Überprüft, ob der Benutzer im Bearbeitungsmodus ist, und zeigt die aktuelle Auswahl an, bevor eine neue Auswahl getroffen wird.
 func HandleAddSelectItem(currentItem string, items []string, itemType string, isEditing bool) string {
@@ -446,8 +420,11 @@ func HandleAddSelectItem(currentItem string, items []string, itemType string, is
 	} else {
 		ShowMessage(fmt.Sprintf("Current: %s", currentItem))
 		newItem := SelectItem(items, PageSize, itemType)
-		if newItem != "" {
+		if newItem != "" && newItem != "C" {
 			return newItem
+		}
+		if newItem == "C" {
+			return "C"
 		}
 		return currentItem
 	}
@@ -524,11 +501,6 @@ func ShowOnlyCancelMessage() string {
 	reader := bufio.NewReader(os.Stdin)
 	input, _ := reader.ReadString('\n')
 	return strings.TrimSpace(input)
-}
-
-// ShowPrompt displays a message to prompt the user for input
-func ShowPrompt(message string) {
-	fmt.Println(message)
 }
 
 // GetUserInput reads and trims the user input from the console
