@@ -425,6 +425,7 @@ func DisplaySuppliers(suppliers []string, start, end int) {
 	}
 }
 
+// ShowSuppliersList shows the list of items with their index and details
 func ShowSuppliersList(suppliers []string) {
 	fmt.Println("* Showing Existing Suppliers *")
 	for i, supplier := range suppliers {
@@ -437,11 +438,12 @@ func ShowNoSuppliersMessage() {
 	fmt.Println("List is empty. No supplier available.")
 }
 
+// ShowEndOfSupplier indicate the end of the displayed list
 func ShowEndOfSupplier() {
 	fmt.Println("End of supplier list reached.")
 }
 
-// DisplayCategories displays a paginated list of suppliers
+// DisplayCategories displays a paginated list of categories
 func DisplayCategories(suppliers []string, start, end int) {
 	fmt.Println("* Available Categories:")
 	for i := start; i < end && i < len(suppliers); i++ {
@@ -449,6 +451,7 @@ func DisplayCategories(suppliers []string, start, end int) {
 	}
 }
 
+// ShowCategoriesList shows the list of items with their index and details
 func ShowCategoriesList(Categories []string) {
 	fmt.Println("* Showing Existing Categories *")
 	for i, category := range Categories {
@@ -456,11 +459,12 @@ func ShowCategoriesList(Categories []string) {
 	}
 }
 
-// ShowNoCategoriesMessage displays a message when no Category are available
+// ShowNoCategoriesMessage displays a message when no category are available
 func ShowNoCategoriesMessage() {
 	fmt.Println("List is empty. No Category available.")
 }
 
+// ShowEndOfCategory indicate the end of the displayed list
 func ShowEndOfCategory() {
 	fmt.Println("End of Category list reached.")
 }
@@ -470,6 +474,7 @@ func ErrorMessage(message string) {
 	fmt.Println("Error:", message)
 }
 
+// GetPageInput waits for the user to press Enter or type 'c' to cancel
 func GetPageInput() string {
 	fmt.Print("Press Enter to continue or 'c' to cancel:\n")
 	reader := bufio.NewReader(os.Stdin)
@@ -485,10 +490,12 @@ func ShowOnlyCancelMessage() string {
 	return strings.TrimSpace(input)
 }
 
+// ShowPrompt displays a message to prompt the user for input
 func ShowPrompt(message string) {
 	fmt.Println(message)
 }
 
+// GetUserInput reads and trims the user input from the console
 func GetUserInput() string {
 	reader := bufio.NewReader(os.Stdin)
 	input, _ := reader.ReadString('\n')

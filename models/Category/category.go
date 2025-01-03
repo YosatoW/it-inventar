@@ -23,7 +23,8 @@ func ReadCategories(filePath string) ([]string, error) {
 
 	// Create a CSV reader and read all rows from the file
 	reader := csv.NewReader(file)
-	reader.FieldsPerRecord = -1 // Allow variable number of fields per record
+	// Allow variable number of fields per record
+	reader.FieldsPerRecord = -1
 	records, err := reader.ReadAll()
 	if err != nil {
 		return nil, err
@@ -51,6 +52,7 @@ func AddCategoryToFile(filePath string, categoryName string) error {
 		}
 	}(file)
 
+	// Initialize a CSV writer to write to the file
 	writer := csv.NewWriter(file)
 	defer writer.Flush()
 
@@ -64,20 +66,21 @@ func AddCategoryToFile(filePath string, categoryName string) error {
 
 // DeleteCategory from existing list
 func DeleteCategory(filePath string, index int) error {
-	suppliers, err := ReadCategories(filePath)
+	categories, err := ReadCategories(filePath)
 	if err != nil {
-		return fmt.Errorf("error reading suppliers: %v", err)
+		return fmt.Errorf("error reading categories: %v", err)
 	}
 
 	// Remove the selected supplier
-	suppliers = append(suppliers[:index-1], suppliers[index:]...)
+	categories = append(categories[:index], categories[index+1:]...)
 
 	// Overwrite the supplier file
-	return OverwriteCategoryFile(filePath, suppliers)
+	return OverwriteCategoryFile(filePath, categories)
 }
 
+// OverwriteCategoryFile overwrites the content of the given file with the provided list of categories.
 func OverwriteCategoryFile(filePath string, categories []string) error {
-	file, err := os.Create(filePath) // Create a new file (overwrite existing)
+	file, err := os.Create(filePath)
 	if err != nil {
 		return err
 	}
@@ -88,11 +91,13 @@ func OverwriteCategoryFile(filePath string, categories []string) error {
 		}
 	}(file)
 
+	// Initialize a CSV writer to write to the file
 	writer := csv.NewWriter(file)
 	defer writer.Flush()
 
+	// Write each category as a new row in the CSV file
 	for _, categories := range categories {
-		err = writer.Write([]string{categories}) // Write each category as a row
+		err = writer.Write([]string{categories})
 		if err != nil {
 			return err
 		}

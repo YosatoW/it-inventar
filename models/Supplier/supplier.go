@@ -23,7 +23,8 @@ func ReadSuppliers(filePath string) ([]string, error) {
 
 	// Create a CSV reader and read all rows from the file
 	reader := csv.NewReader(file)
-	reader.FieldsPerRecord = -1 // Allow variable number of fields per record
+	// Allow variable number of fields per record
+	reader.FieldsPerRecord = -1
 	records, err := reader.ReadAll()
 	if err != nil {
 		return nil, err
@@ -52,9 +53,11 @@ func AddSupplierToFile(filePath, supplierName string) error {
 		}
 	}(file)
 
+	// Initialize a CSV writer to write to the file
 	writer := csv.NewWriter(file)
 	defer writer.Flush()
 
+	// Write supplier name in a new line
 	if err := writer.Write([]string{supplierName}); err != nil {
 		return err
 	}
@@ -69,12 +72,13 @@ func DeleteSupplier(filePath string, index int) error {
 	}
 
 	// Remove the selected supplier
-	suppliers = append(suppliers[:index-1], suppliers[index:]...)
+	suppliers = append(suppliers[:index], suppliers[index+1:]...)
 
 	// Overwrite the supplier file
 	return OverwriteSupplierFile(filePath, suppliers)
 }
 
+// OverwriteSupplierFile overwrites the content of the given file with the provided list of categories.
 func OverwriteSupplierFile(filePath string, suppliers []string) error {
 	file, err := os.Create(filePath) // Create a new file (overwrite existing)
 	if err != nil {
@@ -87,9 +91,11 @@ func OverwriteSupplierFile(filePath string, suppliers []string) error {
 		}
 	}(file)
 
+	// Initialize a CSV writer to write to the file
 	writer := csv.NewWriter(file)
 	defer writer.Flush()
 
+	// Write each category as a new row in the CSV file
 	for _, supplier := range suppliers {
 		err = writer.Write([]string{supplier}) // Write each supplier as a row
 		if err != nil {

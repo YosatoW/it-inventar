@@ -395,14 +395,15 @@ func handleViewItems() {
 	}
 }
 
-// handleShowSuppliers Case 1
+// handleShowSuppliers displays a list of suppliers and allows navigation or exiting
 func handleShowSuppliers() {
+	// Read the list of suppliers from the CSV file
 	suppliers, err := Supplier.ReadSuppliers("supplier.csv")
 	if err != nil {
 		console.ErrorMessage(fmt.Sprintf("Error reading suppliers: %v\n", err))
 		return
 	}
-
+	// Check if the list is empty
 	if len(suppliers) == 0 {
 		console.ShowNoSuppliersMessage()
 		return
@@ -410,25 +411,28 @@ func handleShowSuppliers() {
 
 	page := InitialPage
 	for {
+		// Calculate the start and end indices for the current page
 		start := page * pageSize
 		end := start + pageSize
 		if end > len(suppliers) {
-			end = len(suppliers) // Adjust end if it exceeds the list size
+			end = len(suppliers)
 		}
 
+		// Display the current page of suppliers
 		console.DisplaySuppliers(suppliers, start, end)
 
 		// Check if the end of the list has been reached
 		if end >= len(suppliers) {
-			console.ShowEndOfSupplier() // Display a message indicating the end of the list
+			console.ShowEndOfSupplier()
 
 			for {
+				// Ask the user to continue or exit
 				userChoice := console.ShowOnlyCancelMessage()
 				if userChoice == "c" {
-					break // Exit the loop and return to the menu
+					break
 				}
 			}
-			break // Exit the main loop
+			break
 		}
 
 		// For normal page navigation
@@ -436,12 +440,12 @@ func handleShowSuppliers() {
 		if userChoice == "c" {
 			break
 		} else if userChoice == "" {
-			page++ // Move to the next page
+			page++
 		}
 	}
 }
 
-// handleAddSuppliers Case 2
+// handleAddSuppliers allows the user to add new suppliers to the list with an option to cancel
 func handleAddSuppliers() {
 	filePath := "supplier.csv"
 
@@ -452,7 +456,7 @@ func handleAddSuppliers() {
 			console.ErrorMessage(fmt.Sprintf("Error reading suppliers: %v", err))
 			return
 		}
-		console.ShowSuppliersList(suppliers) // Display the suppliers
+		console.ShowSuppliersList(suppliers)
 
 		// Prompt for new supplier
 		console.ShowPrompt("Enter the name of the supplier you want to add (or 'C' to cancel):")
@@ -473,29 +477,32 @@ func handleAddSuppliers() {
 	}
 }
 
-// handleDeleteSupplier Case 3
+// handleDeleteSupplier enables the deletion of suppliers from the list with input validation and cancellation
 func handleDeleteSupplier() {
 	filePath := "supplier.csv"
 
-	for { // Loop to allow multiple deletions
-		// Read the supplier list
+	for {
+		// Read the list of suppliers from the CSV file
 		suppliers, err := Supplier.ReadSuppliers(filePath)
 		if err != nil {
 			console.ErrorMessage(fmt.Sprintf("Error reading suppliers: %v", err))
 			return
 		}
 
+		// Check if the supplier list is empty
 		if len(suppliers) == 0 {
 			console.ShowMessage("No suppliers available to delete.")
 			return
 		}
 
-		console.ShowSuppliersList(suppliers) // Display the suppliers
+		// Display the list of existing suppliers
+		console.ShowSuppliersList(suppliers)
 
 		// Prompt user to select a supplier to delete
 		console.ShowPrompt("Enter the number of the supplier you want to delete (or 'C' to cancel):")
 		input := console.GetUserInput()
 
+		// Check if the user wants to cancel
 		if input == "C" || input == "c" {
 			console.ShowMessage("Action canceled. Returning to the service menu...")
 			return
@@ -516,18 +523,20 @@ func handleDeleteSupplier() {
 			return
 		}
 
+		// Confirm successful deletion
 		console.ShowMessage(fmt.Sprintf("Supplier '%s' deleted successfully.", supplierToDelete))
 	}
 }
 
-// handleShowSuppliers Case 1
+// handleShowCategories displays a list of categories and allows navigation or exiting
 func handleShowCategories() {
+	// Calculate the start and end indices for the current page
 	categories, err := Category.ReadCategories("categories.csv")
 	if err != nil {
 		console.ErrorMessage(fmt.Sprintf("Error reading categories: %v\n", err))
 		return
 	}
-
+	// Display the current page of categories
 	if len(categories) == 0 {
 		console.ShowNoCategoriesMessage()
 		return
@@ -535,25 +544,27 @@ func handleShowCategories() {
 
 	page := InitialPage
 	for {
+		// Calculate the start and end indices for the current page
 		start := page * pageSize
 		end := start + pageSize
 		if end > len(categories) {
-			end = len(categories) // Adjust end if it exceeds the list size
+			end = len(categories)
 		}
 
 		console.DisplayCategories(categories, start, end)
 
 		// Check if the end of the list has been reached
 		if end >= len(categories) {
-			console.ShowEndOfCategory() // Display a message indicating the end of the list
+			console.ShowEndOfCategory()
 
 			for {
+				// Ask the user to continue or exit
 				userChoice := console.ShowOnlyCancelMessage()
 				if userChoice == "c" {
-					break // Exit the loop and return to the menu
+					break
 				}
 			}
-			break // Exit the main loop
+			break
 		}
 
 		// For normal page navigation
@@ -561,12 +572,12 @@ func handleShowCategories() {
 		if userChoice == "c" {
 			break
 		} else if userChoice == "" {
-			page++ // Move to the next page
+			page++
 		}
 	}
 }
 
-// AddCategory Case 12
+// handleAddCategories allows the user to add new categories to the list with an option to cancel
 func handleAddCategories() {
 	filePath := "categories.csv"
 
@@ -577,7 +588,7 @@ func handleAddCategories() {
 			console.ErrorMessage(fmt.Sprintf("Error reading categories: %v", err))
 			return
 		}
-		console.ShowCategoriesList(categories) // Display the categories
+		console.ShowCategoriesList(categories)
 
 		// Prompt for new supplier
 		console.ShowPrompt("Enter the name of the category you want to add (or 'C' to cancel):")
@@ -598,29 +609,32 @@ func handleAddCategories() {
 	}
 }
 
-// DeleteCategory Case 13
+// handleDeleteCategories enables the deletion of categories from the list with input validation and cancellation
 func handleDeleteCategories() {
 	filePath := "categories.csv"
 
-	for { // Loop to allow multiple deletions
-		// Read the supplier list
+	for {
+		// Read the list of categories from the CSV file
 		categories, err := Category.ReadCategories(filePath)
 		if err != nil {
 			console.ErrorMessage(fmt.Sprintf("Error reading categories: %v", err))
 			return
 		}
 
+		// Check if the category list is empty
 		if len(categories) == 0 {
 			console.ShowMessage("No categories available to delete.")
 			return
 		}
 
-		console.ShowCategoriesList(categories) // Display the categories
+		// Display the list of existing categories
+		console.ShowCategoriesList(categories)
 
 		// Prompt user to select a category to delete
 		console.ShowPrompt("Enter the number of the category you want to delete (or 'C' to cancel):")
 		input := console.GetUserInput()
 
+		// Check if the user wants to cancel
 		if input == "C" || input == "c" {
 			console.ShowMessage("Action canceled. Returning to the service menu...")
 			return
@@ -641,6 +655,7 @@ func handleDeleteCategories() {
 			return
 		}
 
+		// Confirm successful deletion
 		console.ShowMessage(fmt.Sprintf("Category '%s' deleted successfully.", categoryToDelete))
 	}
 }
