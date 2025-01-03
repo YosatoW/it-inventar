@@ -8,13 +8,13 @@ func ShowExecuteCommandMenu() {
 	###########################################
 	#******** WELCOME TO OUR INVENTORY ********
 	#******** CHOOSE YOUR OPTION BELOW ********
-	# 1. Artikel hinzufügen
-	# 2. Artikel löschen
-	# 3. Artikel buchung
-	# 4. Artikelinformationen ändern
+	# 1. Add article
+	# 2. Delete article
+	# 3. Article booking
+	# 4. Change article information
 	#
 	#
-	# 9. Lagerbestand anzeigen
+	# 9. Show article
 	#
 	# c. CLEAR VIEW AND SHOW MENU
 	# q. EXIT INVENTORY APP
