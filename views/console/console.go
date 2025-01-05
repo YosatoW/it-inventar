@@ -311,9 +311,9 @@ func AskForQuantity(defaultValue int, isEditing bool) int {
 	for {
 		prompt := "Quantity"
 		if isEditing && defaultValue >= 0 {
-			ShowMessage(fmt.Sprintf("* %s [Entered: %d]:", prompt, defaultValue))
+			ShowMessage(fmt.Sprintf(" %s [Entered: %d]:", prompt, defaultValue))
 		} else {
-			ShowMessage(fmt.Sprintf("* %s:", prompt))
+			ShowMessage(fmt.Sprintf(" %s:", prompt))
 		}
 
 		quantityInput := AskForInput()
@@ -341,11 +341,11 @@ func AskForNotes(defaultValue string, isEditing bool) string {
 	if isEditing && defaultValue != "" {
 		ShowMessage(fmt.Sprintf("Entered: (%s)\n\"Enter\" to keep, \"Space\" to clear\n * Notes:", defaultValue))
 	} else {
-		ShowMessage("* Notes (optional):")
+		ShowMessage("Notes (optional):")
 	}
 
 	note := AskForInput()
-	if strings.TrimSpace(note) == "" {
+	if strings.TrimSpace(note) == " " {
 		return "" // Clear the field if only spaces were entered
 	} else if note == "" && defaultValue != "" {
 		return defaultValue // Use the old value if nothing was entered

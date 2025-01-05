@@ -273,8 +273,8 @@ func handleChanceArticleInformation() {
 
 			// Select category
 			console.ShowMessage(fmt.Sprintf("Current category: %s", item.Category))
-			newCategory = selectItemWithCancel(selectedCategories, "Category")
-			if newCategory == "" {
+			newCategory = console.HandleAddSelectItem(newCategory, selectedCategories, "Category", isEditing)
+			if newCategory == "C" {
 				return
 			}
 
@@ -283,8 +283,8 @@ func handleChanceArticleInformation() {
 
 			// Select supplier
 			console.ShowMessage(fmt.Sprintf("Current supplier: %s", item.Supplier))
-			newSupplier = selectItemWithCancel(selectedSuppliers, "Supplier")
-			if newSupplier == "" {
+			newSupplier = console.HandleAddSelectItem(newSupplier, selectedSuppliers, "Supplier", isEditing)
+			if newSupplier == "C" {
 				return
 			}
 

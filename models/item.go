@@ -75,6 +75,7 @@ func getDataFromDataFile() ([]Item, error) {
 	defer file.Close()
 
 	csvReader := csv.NewReader(file)
+	csvReader.Comma = ';'
 	csvReader.FieldsPerRecord = reflect.TypeOf(Item{}).NumField()
 	records, err := csvReader.ReadAll()
 	if err != nil {
@@ -102,6 +103,7 @@ func updateDataInFile() error {
 		return err
 	}
 	writer := csv.NewWriter(file)
+	writer.Comma = ';'
 
 	for _, item := range items {
 		itemRecord := getItemAsStringSlice(item)
@@ -135,8 +137,8 @@ func ParseItemFromCsvStringList(record []string) (Item, error) {
 	}
 
 	var deleteDate *time.Time
-	if record[7] != "" {
-		parsedTime, err := time.Parse(time.RFC3339, record[7])
+	if record[6] != "" {
+		parsedTime, err := time.Parse(time.RFC3339, record[6])
 		if err != nil {
 			return parsedItem, err
 		}
@@ -201,6 +203,7 @@ func getDataFromSupplierFile() ([]Supplier, error) {
 	defer file.Close()
 
 	csvReader := csv.NewReader(file)
+	csvReader.Comma = ';'
 	records, err := csvReader.ReadAll()
 	if err != nil {
 		return nil, err
