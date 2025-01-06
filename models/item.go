@@ -151,10 +151,10 @@ func ParseItemFromCsvStringList(record []string) (Item, error) {
 		Category:      strings.TrimSpace(record[1]),
 		ArticleNumber: strings.TrimSpace(record[2]),
 		Supplier:      strings.TrimSpace(record[3]),
-		Quantity:      StringToInt(record[4]), // Menge als int
+		Quantity:      StringToInt(record[4]),
 		Note:          strings.TrimSpace(record[5]),
 		DeleteDate:    deleteDate,
-		IsDeleted:     record[6] == "true",
+		IsDeleted:     record[7] == "true", // Korrekte Zuordnung des IsDeleted-Feldes
 	}
 
 	return parsedItem, nil
@@ -193,40 +193,11 @@ func UpdateItem(id int, updatedItem Item) error {
 	return updateDataInFile()
 }
 
-// *getDataFromSupplierFile: Reads supplier data from a CSV file.
-// *getDataFromSupplierFile: liest die Lieferantendaten aus der CSV-Datei
-func getDataFromSupplierFile() ([]Supplier, error) {
-	file, err := os.Open(FileSupplier)
-	if err != nil {
-		return nil, err
-	}
-	defer file.Close()
-
-	csvReader := csv.NewReader(file)
-	csvReader.Comma = ';'
-	records, err := csvReader.ReadAll()
-	if err != nil {
-		return nil, err
-	}
-
-	var readSuppliers []Supplier
-	for _, record := range records {
-		readSuppliers = append(readSuppliers, Supplier{
-			SupplierName: record[0],
-		})
-	}
-
-	return readSuppliers, nil
-}
-
 const FileData = "data.csv"
 const FileCategories = "categories.csv"
 const FileSupplier = "supplier.csv"
 
 var items []Item
-
-//var suppliers []Supplier
-//var categories []Category
 
 // *AddItem: adds the passed Item to the Inventory
 // *AddItem: Fügt den übergebenen Artikel dem Inventar hinzu.
@@ -247,11 +218,6 @@ func Initialize() error {
 	if err != nil {
 		return err
 	}
-	// Initialisieren Lieferanten
-	//suppliers, err = getDataFromSupplierFile()
-	//if err != nil {
-	//	return err
-	//}
 	return nil
 }
 
@@ -266,10 +232,6 @@ func GetAllItems() []Item {
 // *RemoveItem: removes the passed row ID from the library
 // *RemoveItem: Entfernt die übergebene Zeilen-ID aus dem Inventar.
 func RemoveItem(rowId int) error {
-	// input validation
-	if rowId < 1 || rowId > len(items) {
-		return fmt.Errorf("row Id %d in wrong data range, value must be between 1 and %d", rowId, len(items))
-	}
 
 	// Normalize row ID
 	rowIdNormed := rowId - 1

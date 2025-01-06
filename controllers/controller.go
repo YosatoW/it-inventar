@@ -156,13 +156,13 @@ func handleChangeQuantity() {
 
 	page := InitialPage
 	for {
-		start, end := console.PageIndexCalculate(page, pageSize, len(items))
+		start, end := console.PageIndexCalculate(page, pageSize, len(activeItems))
 
 		console.ShowAllItems(activeItems[start:end], start, false) // showDeletedDate = false
 
 		choice := console.PageIndexPrompt("Item")
 
-		exit, item, rowId := console.PageIndexUserInput(choice, &page, end, items)
+		exit, item, rowId := console.PageIndexUserInput(choice, &page, end, activeItems) // Verwendung von activeItems
 		if exit {
 			return
 		}
@@ -181,16 +181,26 @@ func handleChangeQuantity() {
 						console.ShowMessage(fmt.Sprintf("Current stock: %d pieces", item.Quantity))
 						console.ShowMessage("Enter the quantity to add:")
 						quantityToAdd := console.AskForQuantity(0, false)
+						if quantityToAdd < 0 {
+							console.ShowMessage("❌ Quantity cannot be less than 0. Please enter a valid quantity.")
+							console.ShowContinue()
+							continue
+						}
 						item.Quantity += quantityToAdd
 					} else if strings.ToLower(operation) == "2" {
 						// Ask for the quantity to subtract
 						console.ShowMessage(fmt.Sprintf("Current stock: %d pieces", item.Quantity))
 						console.ShowMessage("Enter the quantity to subtract:")
 						quantityToSubtract := console.AskForQuantity(0, false)
+						if quantityToSubtract < 0 {
+							console.ShowMessage("❌ Quantity cannot be less than 0. Please enter a valid quantity.")
+							console.ShowContinue()
+							continue
+						}
 						if item.Quantity < quantityToSubtract {
 							console.ShowMessage("❌ The quantity to subtract exceeds the available quantity.")
 							console.ShowContinue()
-							continue
+							return // Funktion abbrechen, wenn die Menge nach dem Subtrahieren weniger als 0 ist
 						}
 						item.Quantity -= quantityToSubtract
 					} else {
@@ -243,91 +253,85 @@ func handleChanceArticleInformation() {
 		var isEditing bool = false
 		var NewArticleName, newCategory, newArticleNumber, newSupplier, newNotes string
 
-		start, end := console.PageIndexCalculate(page, pageSize, len(items))
+		start, end := console.PageIndexCalculate(page, pageSize, len(activeItems))
 
 		console.ShowAllItems(activeItems[start:end], start, false) // showDeletedDate = false
 
 		choice := console.PageIndexPrompt("Item")
 
-		exit, item, rowId := console.PageIndexUserInput(choice, &page, end, items)
+		exit, item, rowId := console.PageIndexUserInput(choice, &page, end, activeItems)
 		if exit {
 			return
 		}
 		if item != nil {
+			for {
+				// The input values are now initialized only once and reused for corrections
+				console.ShowMessage(fmt.Sprintf("Current item name: %s", item.ArticleName))
+				NewArticleName = console.AskForArticleName(item.ArticleName, isEditing)
 
-			// The input values are now initialized only once and reused for corrections
-			console.ShowMessage(fmt.Sprintf("Current item name: %s", item.ArticleName))
-			NewArticleName = console.AskForArticleName(item.ArticleName, isEditing)
-
-			// Load categories and suppliers
-			selectedCategories, err := Category.ReadCategories(models.FileCategories)
-			if err != nil {
-				console.ShowError(err)
-				return
-			}
-			selectedSuppliers, err := Supplier.ReadSuppliers(models.FileSupplier)
-			if err != nil {
-				console.ShowError(err)
-				return
-			}
-
-			// Select category
-			console.ShowMessage(fmt.Sprintf("Current category: %s", item.Category))
-			newCategory = console.HandleAddSelectItem(newCategory, selectedCategories, "Category", isEditing)
-			if newCategory == "C" {
-				return
-			}
-
-			console.ShowMessage(fmt.Sprintf("Current article number: %s", item.ArticleNumber))
-			newArticleNumber = console.AskForArticleNumber(item.ArticleNumber, isEditing)
-
-			// Select supplier
-			console.ShowMessage(fmt.Sprintf("Current supplier: %s", item.Supplier))
-			newSupplier = console.HandleAddSelectItem(newSupplier, selectedSuppliers, "Supplier", isEditing)
-			if newSupplier == "C" {
-				return
-			}
-
-			newQuantity := item.Quantity
-
-			console.ShowMessage(fmt.Sprintf("Current notes: %s", item.Note))
-			newNotes = console.AskForNotes(item.Note, isEditing)
-
-			// Confirmation to edit the item
-			if handleConfirmItemDetails(NewArticleName, newCategory, newArticleNumber, newSupplier, newQuantity, newNotes) {
-				// Update item
-				data := models.Item{
-					ArticleName:   NewArticleName,
-					Category:      newCategory,
-					ArticleNumber: newArticleNumber,
-					Supplier:      newSupplier,
-					Quantity:      newQuantity,
-					Note:          newNotes,
-				}
-				// Adjust the index correctly here
-				err := models.UpdateItem(rowId-1, data)
+				// Load categories and suppliers
+				selectedCategories, err := Category.ReadCategories(models.FileCategories)
 				if err != nil {
 					console.ShowError(err)
-				} else {
-					console.ShowMessage("✅ Item successfully updated!")
-					console.ShowContinue()
-					console.Clear()
-					console.ShowExecuteCommandMenu()
 					return
 				}
-			} else {
-				isEditing = true
+				selectedSuppliers, err := Supplier.ReadSuppliers(models.FileSupplier)
+				if err != nil {
+					console.ShowError(err)
+					return
+				}
+
+				// Select category
+				console.ShowMessage(fmt.Sprintf("Current category: %s", item.Category))
+				newCategory = console.HandleAddSelectItem(newCategory, selectedCategories, "Category", isEditing)
+				if newCategory == "C" {
+					return
+				}
+
+				console.ShowMessage(fmt.Sprintf("Current article number: %s", item.ArticleNumber))
+				newArticleNumber = console.AskForArticleNumber(item.ArticleNumber, isEditing)
+
+				// Select supplier
+				console.ShowMessage(fmt.Sprintf("Current supplier: %s", item.Supplier))
+				newSupplier = console.HandleAddSelectItem(newSupplier, selectedSuppliers, "Supplier", isEditing)
+				if newSupplier == "C" {
+					return
+				}
+
+				newQuantity := item.Quantity
+
+				console.ShowMessage(fmt.Sprintf("Current notes: %s", item.Note))
+				newNotes = console.AskForNotes(item.Note, isEditing)
+
+				// Confirmation to edit the item
+				if handleConfirmItemDetails(NewArticleName, newCategory, newArticleNumber, newSupplier, newQuantity, newNotes) {
+					// Update item
+					data := models.Item{
+						ArticleName:   NewArticleName,
+						Category:      newCategory,
+						ArticleNumber: newArticleNumber,
+						Supplier:      newSupplier,
+						Quantity:      newQuantity,
+						Note:          newNotes,
+					}
+					// Adjust the index correctly here
+					err := models.UpdateItem(rowId-1, data)
+					if err != nil {
+						console.ShowError(err)
+					} else {
+						console.ShowMessage("✅ Item successfully updated!")
+						console.ShowContinue()
+						console.Clear()
+						console.ShowExecuteCommandMenu()
+						return
+					}
+				} else {
+					isEditing = true
+					console.ShowMessage("Please make the necessary changes.")
+				}
 			}
 		}
 	}
-}
-
-func selectItemWithCancel(items []string, itemType string) string {
-	selectedItem := console.SelectItem(items, pageSize, itemType)
-	if selectedItem == "" {
-		console.InputC()
-	}
-	return selectedItem
 }
 
 // handleConfirmItemDetails is a method that is used to obtain confirmation from the user for the specified item details
@@ -365,6 +369,7 @@ func handleViewItems() {
 	console.Clear()
 	items := models.GetAllItems()
 
+	// Filter out deleted items
 	activeItems := models.GetActiveItems(items)
 
 	if len(activeItems) == 0 {
@@ -399,9 +404,14 @@ func handleViewDeletedItems() {
 	console.Clear()
 	items := models.GetAllItems()
 
+	// Filter out non-deleted items
 	deletedItems := models.GetDeletedItems(items)
 
-	if console.ChecksInventory() {
+	if len(deletedItems) == 0 {
+		console.ShowMessage("❌ No deleted items available.")
+		console.ShowContinue()
+		console.Clear()
+		console.ShowExecuteCommandMenu()
 		return
 	}
 
