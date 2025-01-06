@@ -456,7 +456,7 @@ func handleShowSuppliers() {
 	// Read the list of suppliers from the CSV file
 	suppliers, err := Supplier.ReadSuppliers("supplier.csv")
 	if err != nil {
-		console.ErrorMessage(fmt.Sprintf("Error reading suppliers: %v\n", err))
+		console.ErrorMessage(fmt.Sprintf("❌ Error reading suppliers: %v\n", err))
 		return
 	}
 	// Check if the list is empty
@@ -509,7 +509,7 @@ func handleAddSuppliers() {
 		// Display the list of existing suppliers
 		suppliers, err := Supplier.ReadSuppliers(filePath)
 		if err != nil {
-			console.ErrorMessage(fmt.Sprintf("Error reading suppliers: %v", err))
+			console.ErrorMessage(fmt.Sprintf("❌ Error reading suppliers: %v", err))
 			return
 		}
 		console.ShowSuppliersList(suppliers)
@@ -526,9 +526,9 @@ func handleAddSuppliers() {
 		// Add the new supplier to the file
 		err = Supplier.AddSupplierToFile(filePath, supplierName)
 		if err != nil {
-			console.ErrorMessage(fmt.Sprintf("Error adding supplier: %v", err))
+			console.ErrorMessage(fmt.Sprintf("❌ Error adding supplier: %v", err))
 		} else {
-			console.ShowMessage("Supplier added successfully")
+			console.ShowMessage("✅ Supplier added successfully")
 		}
 	}
 }
@@ -541,7 +541,7 @@ func handleDeleteSupplier() {
 		// Read the list of suppliers from the CSV file
 		suppliers, err := Supplier.ReadSuppliers(filePath)
 		if err != nil {
-			console.ErrorMessage(fmt.Sprintf("Error reading suppliers: %v", err))
+			console.ErrorMessage(fmt.Sprintf("❌ Error reading suppliers: %v", err))
 			return
 		}
 
@@ -575,12 +575,12 @@ func handleDeleteSupplier() {
 		supplierToDelete := suppliers[index-1]
 		err = Supplier.DeleteSupplier(filePath, index-1)
 		if err != nil {
-			console.ErrorMessage(fmt.Sprintf("Error deleting supplier: %v", err))
+			console.ErrorMessage(fmt.Sprintf("❌ Error deleting supplier: %v", err))
 			return
 		}
 
 		// Confirm successful deletion
-		console.ShowMessage(fmt.Sprintf("Supplier '%s' deleted successfully.", supplierToDelete))
+		console.ShowMessage(fmt.Sprintf("✅ Supplier '%s' deleted successfully.", supplierToDelete))
 	}
 }
 
@@ -589,7 +589,7 @@ func handleShowCategories() {
 	// Calculate the start and end indices for the current page
 	categories, err := Category.ReadCategories("categories.csv")
 	if err != nil {
-		console.ErrorMessage(fmt.Sprintf("Error reading categories: %v\n", err))
+		console.ErrorMessage(fmt.Sprintf("❌ Error reading categories: %v\n", err))
 		return
 	}
 	// Display the current page of categories
@@ -641,7 +641,7 @@ func handleAddCategories() {
 		// Display the list of existing categories
 		categories, err := Category.ReadCategories(filePath)
 		if err != nil {
-			console.ErrorMessage(fmt.Sprintf("Error reading categories: %v", err))
+			console.ErrorMessage(fmt.Sprintf("❌ Error reading categories: %v", err))
 			return
 		}
 		console.ShowCategoriesList(categories)
@@ -658,9 +658,9 @@ func handleAddCategories() {
 		// Add the new category to the file
 		err = Category.AddCategoryToFile(filePath, categoryName)
 		if err != nil {
-			console.ErrorMessage(fmt.Sprintf("Error adding category: %v", err))
+			console.ErrorMessage(fmt.Sprintf("❌ Error adding category: %v", err))
 		} else {
-			console.ShowMessage("Category added successfully")
+			console.ShowMessage("✅ Category added successfully")
 		}
 	}
 }
@@ -673,7 +673,7 @@ func handleDeleteCategories() {
 		// Read the list of categories from the CSV file
 		categories, err := Category.ReadCategories(filePath)
 		if err != nil {
-			console.ErrorMessage(fmt.Sprintf("Error reading categories: %v", err))
+			console.ErrorMessage(fmt.Sprintf("❌ Error reading categories: %v", err))
 			return
 		}
 
@@ -707,11 +707,11 @@ func handleDeleteCategories() {
 		categoryToDelete := categories[index-1]
 		err = Category.DeleteCategory(filePath, index-1)
 		if err != nil {
-			console.ErrorMessage(fmt.Sprintf("Error deleting category: %v", err))
+			console.ErrorMessage(fmt.Sprintf("❌ Error deleting category: %v", err))
 			return
 		}
 
 		// Confirm successful deletion
-		console.ShowMessage(fmt.Sprintf("Category '%s' deleted successfully.", categoryToDelete))
+		console.ShowMessage(fmt.Sprintf("✅ Category '%s' deleted successfully.", categoryToDelete))
 	}
 }

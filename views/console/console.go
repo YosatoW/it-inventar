@@ -448,7 +448,7 @@ func ShowSuppliersList(suppliers []string) {
 
 // ShowNoSuppliersMessage displays a message when no suppliers are available
 func ShowNoSuppliersMessage() {
-	fmt.Println("List is empty. No supplier available.")
+	fmt.Println("⚠️ List is empty. No supplier available.")
 }
 
 // ShowEndOfSupplier indicate the end of the displayed list
@@ -474,7 +474,7 @@ func ShowCategoriesList(Categories []string) {
 
 // ShowNoCategoriesMessage displays a message when no category are available
 func ShowNoCategoriesMessage() {
-	fmt.Println("List is empty. No Category available.")
+	fmt.Println("⚠️ List is empty. No Category available.")
 }
 
 // ShowEndOfCategory indicate the end of the displayed list
@@ -484,7 +484,7 @@ func ShowEndOfCategory() {
 
 // ErrorMessage displays an error message
 func ErrorMessage(message string) {
-	fmt.Println("Error:", message)
+	fmt.Println("❌ Error:", message)
 }
 
 // GetPageInput waits for the user to press Enter or type 'c' to cancel
