@@ -1,8 +1,8 @@
-Dell UltraSharp U2720Q;Monitoren;M001;Dell;10;4K,27 Zoll;;false
-HP Z27;Monitoren;M002;HP;8;4K,27 Zoll;;false
-Samsung Odyssey G7;Monitoren;M003;Samsung;5;QHD,32 Zoll;;false
-LG 27GN950-B;Monitoren;M004;Brack.ch;7;4K,27 Zoll;;false
-ASUS ProArt PA278QV;Monitoren;M005;Digitec;6;QHD,27 Zoll;;false
+Dell UltraSharp U2720Q;Monitoren;M001;Dell;1;4K,27 Zoll;;false
+HP Z27;Monitoren;M002;HP;2;4K,27 Zoll;2025-01-06T15:12:41+01:00;true
+Samsung Odyssey G7;Monitoren;M003;Samsung;3;QHD,32 Zoll;;false
+LG 27GN950-B;Monitoren;M004;Brack.ch;4;4K,27 Zoll;;false
+ASUS ProArt PA278QV;Monitoren;M005;Digitec;5;QHD,27 Zoll;;false
 HP LaserJet Pro M404dn;Drucker;D001;HP;4;Schwarz-Weiß,Netzwerkfähig;;false
 Canon imageCLASS MF644Cdw;Drucker;D002;Brack.ch;3;Farb-Laser,Netzwerkfähig;;false
 Brother HL-L2350DW;Drucker;D003;Brother;5;Schwarz-Weiß,Wi-Fi;;false
@@ -58,4 +58,3 @@ Logitech H390;Headsets und Mikrofone;H002;Digitec;8;USB;;false
 Sennheiser SC 165 USB;Headsets und Mikrofone;H003;Brack;6;USB;;false
 Blue Yeti;Headsets und Mikrofone;H004;Mediamarkt Schweiz;4;USB Mikrofon;;false
 Rode NT-USB;Headsets und Mikrofone;H005;Brack.ch;5;USB Mikrofon;;false
-1;Computer/PCs;1;Acer;1;1;;false

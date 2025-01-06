@@ -15,7 +15,7 @@ func ShowExecuteCommandMenu() {
 	#
 	# -9- Show active articles
 	# -9D- Show deleted articles
-	# -9a- Show all articles
+	# -9A- Show all articles
 	#
 	# -C- CLEAR VIEW AND SHOW MENU
 	# -Q- EXIT INVENTORY APP
