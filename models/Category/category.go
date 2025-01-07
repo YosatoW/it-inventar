@@ -68,9 +68,6 @@ func IsValidCategoryName(name string) bool {
 	if name == "" {
 		return false
 	}
-	if len(name) > 50 {
-		return false
-	}
 	for _, char := range name {
 		if !(char >= 'a' && char <= 'z') && !(char >= 'A' && char <= 'Z') && !(char >= '0' && char <= '9') && char != ' ' {
 			return false
