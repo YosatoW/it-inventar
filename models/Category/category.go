@@ -41,7 +41,7 @@ func ReadCategories(filePath string) ([]string, error) {
 }
 
 // AddCategoryToFile adds a new category to the CSV file
-func AddCategoryToFile(filePath string, categoryName string) error {
+func AddCategoryToFile(filePath, categoryName string) error {
 	file, err := os.OpenFile(filePath, os.O_APPEND|os.O_WRONLY|os.O_CREATE, 0644)
 	if err != nil {
 		return err
@@ -49,19 +49,34 @@ func AddCategoryToFile(filePath string, categoryName string) error {
 	defer func(file *os.File) {
 		err := file.Close()
 		if err != nil {
+			fmt.Println("Error closing file:", err)
 		}
 	}(file)
 
-	// Initialize a CSV writer to write to the file
 	writer := csv.NewWriter(file)
 	defer writer.Flush()
 
-	// Write supplier name in a new line
 	if err := writer.Write([]string{categoryName}); err != nil {
 		return err
 	}
 
 	return nil
+}
+
+// IsValidCategoryName checks if the category name meets the validation criteria
+func IsValidCategoryName(name string) bool {
+	if name == "" {
+		return false
+	}
+	if len(name) > 50 {
+		return false
+	}
+	for _, char := range name {
+		if !(char >= 'a' && char <= 'z') && !(char >= 'A' && char <= 'Z') && !(char >= '0' && char <= '9') && char != ' ' {
+			return false
+		}
+	}
+	return true
 }
 
 // DeleteCategory from existing list

@@ -533,6 +533,12 @@ func handleAddSuppliers() {
 			return
 		}
 
+		// Validate the supplier name
+		if !Supplier.IsValidSupplierName(supplierName) {
+			console.ShowMessage("❌ Invalid supplier name. Please use only letters, numbers, and spaces, and ensure it is not empty.")
+			continue
+		}
+
 		// Add the new supplier to the file
 		err = Supplier.AddSupplierToFile(filePath, supplierName)
 		if err != nil {
@@ -656,13 +662,19 @@ func handleAddCategories() {
 		}
 		console.ShowCategoriesList(categories)
 
-		// Prompt for new supplier
+		// Prompt for new category
 		console.ShowMessage("Enter the name of the category you want to add (or 'C' to cancel):")
 		categoryName := console.GetUserInput()
 
 		if categoryName == "C" || categoryName == "c" {
 			console.ShowMessage("Action canceled. Returning to the service menu...")
 			return
+		}
+
+		// Validate the category name
+		if !Category.IsValidCategoryName(categoryName) {
+			console.ShowMessage("❌ Invalid category name. Please use only letters, numbers, and spaces, and ensure it is not empty.")
+			continue
 		}
 
 		// Add the new category to the file
