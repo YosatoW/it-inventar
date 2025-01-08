@@ -12,7 +12,7 @@ import (
 
 const (
 	InitialPage = console.InitialPage
-	pageSize    = console.PageSize
+	PageSize    = console.PageSize
 
 	messageInvalidInput         = "Invalid input!"
 	messageInvalidInputTryAgain = "Please choose:\n[y] Confirm\n[n] Cancel."
@@ -52,19 +52,31 @@ func handleAddItem() {
 
 	for {
 		articleName = console.AskForArticleName(articleName, isEditing)
+		console.Clear()
 		chosenCategory = console.HandleAddSelectItem(chosenCategory, selectedCategories, "Category", isEditing)
 		if chosenCategory == "C" {
+			console.InputC()
 			return
 		}
+		console.Clear()
 		articleNumber = console.AskForArticleNumber(articleNumber, isEditing)
+		console.Clear()
 		chosenSupplier = console.HandleAddSelectItem(chosenSupplier, selectedSuppliers, "Supplier", isEditing)
 		if chosenSupplier == "C" {
+			console.InputC()
 			return
 		}
+		console.Clear()
 		quantity = console.AskForQuantity(quantity, isEditing)
+		console.Clear()
 		notes = console.AskForNotes(notes, isEditing)
 
-		if handleConfirmItemDetails(articleName, chosenCategory, articleNumber, chosenSupplier, quantity, notes) {
+		confirmed, exit := handleConfirmItemDetails(articleName, chosenCategory, articleNumber, chosenSupplier, quantity, notes)
+		if exit {
+			return
+		}
+
+		if confirmed {
 			data := models.Item{
 				ArticleName:   articleName,
 				Category:      chosenCategory,
@@ -100,7 +112,7 @@ func handleRemoveItem() {
 
 	page := InitialPage
 	for {
-		start, end := console.PageIndexCalculate(page, pageSize, len(items))
+		start, end := console.PageIndexCalculate(page, PageSize, len(items))
 
 		console.ShowAllItems(items[start:end], start, false) // showDeletedDate = false
 
@@ -156,7 +168,7 @@ func handleChangeQuantity() {
 
 	page := InitialPage
 	for {
-		start, end := console.PageIndexCalculate(page, pageSize, len(activeItems))
+		start, end := console.PageIndexCalculate(page, PageSize, len(activeItems))
 
 		console.ShowAllItems(activeItems[start:end], start, false) // showDeletedDate = false
 
@@ -178,25 +190,17 @@ func handleChangeQuantity() {
 
 					if strings.ToLower(operation) == "1" {
 						// Ask for the quantity to add
+						console.Clear()
 						console.ShowMessage(fmt.Sprintf("Current stock: %d pieces", item.Quantity))
 						console.ShowMessage("Enter the quantity to add:")
 						quantityToAdd := console.AskForQuantity(0, false)
-						if quantityToAdd < 0 {
-							console.ShowMessage("❌ Quantity cannot be less than 0. Please enter a valid quantity.")
-							console.ShowContinue()
-							continue
-						}
 						item.Quantity += quantityToAdd
 					} else if strings.ToLower(operation) == "2" {
 						// Ask for the quantity to subtract
+						console.Clear()
 						console.ShowMessage(fmt.Sprintf("Current stock: %d pieces", item.Quantity))
 						console.ShowMessage("Enter the quantity to subtract:")
 						quantityToSubtract := console.AskForQuantity(0, false)
-						if quantityToSubtract < 0 {
-							console.ShowMessage("❌ Quantity cannot be less than 0. Please enter a valid quantity.")
-							console.ShowContinue()
-							continue
-						}
 						if item.Quantity < quantityToSubtract {
 							console.ShowMessage("❌ The quantity to subtract exceeds the available quantity.")
 							console.ShowContinue()
@@ -214,6 +218,7 @@ func handleChangeQuantity() {
 					if err != nil {
 						console.ShowError(err)
 					} else {
+						console.Clear()
 						console.ShowMessage(fmt.Sprintf("New stock: %d pieces", item.Quantity))
 						console.ShowMessage("✅ Item quantity successfully updated!")
 						console.ShowContinue()
@@ -253,7 +258,7 @@ func handleChanceArticleInformation() {
 		var isEditing bool = false
 		var NewArticleName, newCategory, newArticleNumber, newSupplier, newNotes string
 
-		start, end := console.PageIndexCalculate(page, pageSize, len(activeItems))
+		start, end := console.PageIndexCalculate(page, PageSize, len(activeItems))
 
 		console.ShowAllItems(activeItems[start:end], start, false) // showDeletedDate = false
 
@@ -265,6 +270,7 @@ func handleChanceArticleInformation() {
 		}
 		if item != nil {
 			for {
+				console.Clear()
 				// The input values are now initialized only once and reused for corrections
 				console.ShowMessage(fmt.Sprintf("Current item name: %s", item.ArticleName))
 				NewArticleName = console.AskForArticleName(item.ArticleName, isEditing)
@@ -280,17 +286,17 @@ func handleChanceArticleInformation() {
 					console.ShowError(err)
 					return
 				}
-
+				console.Clear()
 				// Select category
 				console.ShowMessage(fmt.Sprintf("Current category: %s", item.Category))
 				newCategory = console.HandleAddSelectItem(newCategory, selectedCategories, "Category", isEditing)
 				if newCategory == "C" {
 					return
 				}
-
+				console.Clear()
 				console.ShowMessage(fmt.Sprintf("Current article number: %s", item.ArticleNumber))
 				newArticleNumber = console.AskForArticleNumber(item.ArticleNumber, isEditing)
-
+				console.Clear()
 				// Select supplier
 				console.ShowMessage(fmt.Sprintf("Current supplier: %s", item.Supplier))
 				newSupplier = console.HandleAddSelectItem(newSupplier, selectedSuppliers, "Supplier", isEditing)
@@ -298,13 +304,19 @@ func handleChanceArticleInformation() {
 					return
 				}
 
+				console.Clear()
 				newQuantity := item.Quantity
 
 				console.ShowMessage(fmt.Sprintf("Current notes: %s", item.Note))
 				newNotes = console.AskForNotes(item.Note, isEditing)
 
 				// Confirmation to edit the item
-				if handleConfirmItemDetails(NewArticleName, newCategory, newArticleNumber, newSupplier, newQuantity, newNotes) {
+				confirmed, exit := handleConfirmItemDetails(NewArticleName, newCategory, newArticleNumber, newSupplier, newQuantity, newNotes)
+				if exit {
+					return // Beenden, wenn "c" gewählt wurde
+				}
+
+				if confirmed {
 					// Update item
 					data := models.Item{
 						ArticleName:   NewArticleName,
@@ -335,7 +347,7 @@ func handleChanceArticleInformation() {
 }
 
 // handleConfirmItemDetails is a method that is used to obtain confirmation from the user for the specified item details
-func handleConfirmItemDetails(articleName, category, articleNumber, supplier string, quantity int, notes string) bool {
+func handleConfirmItemDetails(articleName, category, articleNumber, supplier string, quantity int, notes string) (bool, bool) {
 	console.Clear()
 	console.ShowMessage("Please review the new data:")
 	console.ShowMessage(fmt.Sprintf("Item name: %s", articleName))
@@ -349,13 +361,13 @@ func handleConfirmItemDetails(articleName, category, articleNumber, supplier str
 	choice := console.AskForInput()
 	switch strings.ToLower(choice) {
 	case "y":
-		return true
+		return true, false
 	case "n":
 		console.ShowMessage("✏️ Please correct the data.")
-		return false
+		return false, false
 	case "c":
 		console.InputC()
-		return false
+		return false, true
 	default:
 		console.ShowMessage("Invalid input, please try again.")
 		return handleConfirmItemDetails(articleName, category, articleNumber, supplier, quantity, notes)
@@ -366,99 +378,22 @@ func handleConfirmItemDetails(articleName, category, articleNumber, supplier str
 // *handleViewItems Shows all items that have not been deleted.
 // *handleViewItems: Zeigt alle Gegenstände die nicht gelöscht sind.
 func handleViewItems() {
-	console.Clear()
-	items := models.GetAllItems()
-
-	// Filter out deleted items
-	activeItems := models.GetActiveItems(items)
-
-	if len(activeItems) == 0 {
-		console.ShowMessage("❌ No items available.")
-		console.ShowContinue()
-		console.Clear()
-		console.ShowExecuteCommandMenu()
-		return
-	}
-
-	page := InitialPage
-	for {
-		start, end := console.PageIndexCalculate(page, pageSize, len(activeItems))
-		console.ShowAllItems(activeItems[start:end], start, false) // showDeletedDate = false
-		choice := console.PageIndexView()
-		if choice == "c" {
-			console.InputC()
-			return
-		} else if choice == "" {
-			page++
-			if end == len(activeItems) {
-				console.InputPageEnd()
-				return
-			}
-		}
-	}
+	activeItems := models.GetActiveItems(models.GetAllItems())
+	console.HandleViewItemsGeneric(activeItems, false)
 }
 
 // *handleViewDeletedItems: Shows all items that have been deleted
 // *handleViewDeletedItems: Zeigt alle Gegenstände die gelöscht sind
 func handleViewDeletedItems() {
-	console.Clear()
-	items := models.GetAllItems()
-
-	// Filter out non-deleted items
-	deletedItems := models.GetDeletedItems(items)
-
-	if len(deletedItems) == 0 {
-		console.ShowMessage("❌ No deleted items available.")
-		console.ShowContinue()
-		console.Clear()
-		console.ShowExecuteCommandMenu()
-		return
-	}
-
-	page := InitialPage
-	for {
-		start, end := console.PageIndexCalculate(page, pageSize, len(deletedItems))
-		console.ShowAllItems(deletedItems[start:end], start, true) // showDeletedDate = true
-		choice := console.PageIndexView()
-		if choice == "c" {
-			console.InputC()
-			return
-		} else if choice == "" {
-			page++
-			if end == len(deletedItems) {
-				console.InputPageEnd()
-				return
-			}
-		}
-	}
+	deletedItems := models.GetDeletedItems(models.GetAllItems())
+	console.HandleViewItemsGeneric(deletedItems, true)
 }
 
 // *handleViewAllItems: Shows all deleted and undeleted items
 // *handleViewAllItems: Zeigt alle gelöschte und nicht gelöschte Gegenstände
 func handleViewAllItems() {
-	console.Clear()
 	items := models.GetAllItems()
-
-	if console.ChecksInventory() {
-		return
-	}
-
-	page := InitialPage
-	for {
-		start, end := console.PageIndexCalculate(page, pageSize, len(items))
-		console.ShowAllItems(items[start:end], start, true) // showDeletedDate = true
-		choice := console.PageIndexView()
-		if choice == "c" {
-			console.InputC()
-			return
-		} else if choice == "" {
-			page++
-			if end == len(items) {
-				console.InputPageEnd()
-				return
-			}
-		}
-	}
+	console.HandleViewItemsGeneric(items, true)
 }
 
 // handleShowSuppliers displays a list of suppliers and allows navigation or exiting
@@ -478,8 +413,8 @@ func handleShowSuppliers() {
 	page := InitialPage
 	for {
 		// Calculate the start and end indices for the current page
-		start := page * pageSize
-		end := start + pageSize
+		start := page * PageSize
+		end := start + PageSize
 		if end > len(suppliers) {
 			end = len(suppliers)
 		}
@@ -611,8 +546,8 @@ func handleShowCategories() {
 	page := InitialPage
 	for {
 		// Calculate the start and end indices for the current page
-		start := page * pageSize
-		end := start + pageSize
+		start := page * PageSize
+		end := start + PageSize
 		if end > len(categories) {
 			end = len(categories)
 		}

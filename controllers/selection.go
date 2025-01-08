@@ -1,7 +1,6 @@
 package controllers
 
 import (
-	"fmt"
 	"it_inventar/views/console"
 	"strings"
 )
@@ -20,10 +19,6 @@ func executeCommand() {
 		handleChanceArticleInformation()
 	case "9":
 		handleViewItems()
-	case "9D":
-		handleViewDeletedItems()
-	case "9A":
-		handleViewAllItems()
 	case "4600":
 		console.Clear()
 		hiddenCommand()
@@ -73,8 +68,11 @@ func hiddenCommand() {
 		case "12":
 			handleAddCategories()
 		case "13":
-			fmt.Print()
 			handleDeleteCategories()
+		case "ID":
+			handleViewDeletedItems()
+		case "IA":
+			handleViewAllItems()
 		case "C":
 			console.Clear()
 			console.ShowMessage("🔙 Exiting the Hidden Command Menu...")

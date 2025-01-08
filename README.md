@@ -3,7 +3,8 @@
 ## 📘 Description
 
 IT Inventory Management System is a basic console-based application built with the Go programming language.
-The program efficiently enables users to manage suppliers, items, and categories for their IT inventory. Viewing and deleting entries are some of the base functionalities provided by the command-line interface, along with adding entries.
+The program efficiently enables users to manage suppliers, items, and categories for their IT inventory.
+Viewing and deleting entries are some of the base functionalities provided by the command-line interface, along with adding entries.
 
 It's a simple application meant for small business or personal use to document and manage their IT infrastructure.
 

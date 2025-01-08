@@ -13,7 +13,7 @@ func ShowExecuteCommandMenu() {
 	# -3- Article booking
 	# -4- Change article information
 	#
-	# -9- Show active articles
+	# -9- Show articles
 	#
 	# -C- CLEAR VIEW AND SHOW MENU
 	# -Q- EXIT INVENTORY APP
@@ -34,8 +34,9 @@ func ShowHiddenCommandMenu() {
 	# -12- Add category
 	# -13- Delete category
 	#
-
-
+	# -ID- Show deleted Articles
+	# -IA- Show all Articles
+	#
 	# -C- SHOW MAIN MENU
 	`)
 }

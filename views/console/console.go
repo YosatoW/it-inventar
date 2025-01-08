@@ -317,21 +317,21 @@ func AskForQuantity(defaultValue int, isEditing bool) int {
 		}
 
 		quantityInput := AskForInput()
+		quantityInput = strings.TrimSpace(quantityInput) // Entferne überflüssige Leerzeichen
+
 		if quantityInput == "" && defaultValue >= 0 {
 			return defaultValue // Verwende den alten Wert, wenn nichts eingegeben wurde
 		}
 
-		if strings.TrimSpace(quantityInput) == "" {
-			MessageGeneralNotEmpty(prompt)
-			continue
+		// Überprüfen, ob die Eingabe eine gültige Zahl ist
+		quantity, err := strconv.Atoi(quantityInput)
+		if err != nil || quantity < 0 {
+			ShowMessage("⚠️ Quantity must be a positive number. Please try again.") // Fehlermeldung anzeigen
+			continue                                                                // Wiederholen, bis eine gültige Eingabe erfolgt
 		}
 
-		quantity := models.StringToInt(quantityInput)
-		if quantity >= 0 {
-			return quantity
-		} else {
-			ShowMessage("⚠️ Quantity must be a positive number. Please try again.")
-		}
+		// Gültige Zahl zurückgeben
+		return quantity
 	}
 }
 
@@ -374,10 +374,40 @@ func askForInput(fieldName string, defaultValue string, isEditing bool, validate
 	}
 }
 
+// *HandleViewItemsGeneric: shows a paginated list of items and allows you to navigate between pages.
+// *HandleViewItemsGeneric: zeigt eine paginierte Liste von Gegenständen und ermöglicht die Navigation zwischen den Seiten.
+func HandleViewItemsGeneric(items []models.Item, showDeletedDate bool) {
+	Clear()
+
+	if ChecksInventory() {
+		return
+	}
+
+	page := InitialPage
+	for {
+		// Calculation of the start and end indices for the current page
+		start, end := PageIndexCalculate(page, PageSize, len(items))
+		// Display of articles on the current page
+		ShowAllItems(items[start:end], start, showDeletedDate)
+		choice := PageIndexView()
+
+		if choice == "c" {
+			InputC()
+			return
+		} else if choice == "" {
+			page++
+			if end == len(items) {
+				InputPageEnd()
+				return
+			}
+		}
+	}
+}
+
 // *SelectItem: Displays a paginated list of items and returns the selected item.
 // *SelectItem: Zeigt eine paginierte Liste von Artikeln an und gibt den ausgewählten Artikel zurück.
 func SelectItem(items []string, pageSize int, itemType string) string {
-	page := 0
+	page := InitialPage
 	totalPages := (len(items) + pageSize - 1) / pageSize
 
 	for {
@@ -392,17 +422,20 @@ func SelectItem(items []string, pageSize int, itemType string) string {
 			fmt.Printf("Page %d of %d.\n", page+1, totalPages)
 		}
 
-		input := PageIndexPrompt(itemType)
-		input = strings.TrimSpace(input)
+		choice := PageIndexPrompt(itemType)
+		choice = strings.TrimSpace(choice)
 
-		switch strings.ToLower(input) {
-		case "c":
-			ShowMessage("Action canceled. Press [Enter] to continue...")
+		if strings.ToLower(choice) == "c" {
+			Clear()
+			ShowExecuteCommandMenu()
 			return "C"
+		}
+
+		switch choice {
 		case "":
 			page = (page + 1) % totalPages
 		default:
-			choice, err := strconv.Atoi(input)
+			choice, err := strconv.Atoi(choice)
 			if err == nil && choice > 0 && choice <= len(items) {
 				return items[choice-1]
 			}
@@ -432,7 +465,7 @@ func HandleAddSelectItem(currentItem string, items []string, itemType string, is
 
 // DisplaySuppliers displays a paginated list of suppliers
 func DisplaySuppliers(suppliers []string, start, end int) {
-	fmt.Println("* Available suppliers:")
+	ShowMessage("* Available suppliers:")
 	for i := start; i < end && i < len(suppliers); i++ {
 		fmt.Printf("%d. %s\n", i+1, suppliers[i]) // Add 1 to i for correct numbering
 	}
@@ -440,7 +473,7 @@ func DisplaySuppliers(suppliers []string, start, end int) {
 
 // ShowSuppliersList shows the list of items with their index and details
 func ShowSuppliersList(suppliers []string) {
-	fmt.Println("* Showing Existing Suppliers *")
+	ShowMessage("* Showing Existing Suppliers *")
 	for i, supplier := range suppliers {
 		fmt.Printf("%d. %s\n", i+1, supplier)
 	}
@@ -448,17 +481,17 @@ func ShowSuppliersList(suppliers []string) {
 
 // ShowNoSuppliersMessage displays a message when no suppliers are available
 func ShowNoSuppliersMessage() {
-	fmt.Println("⚠️ List is empty. No supplier available.")
+	ShowMessage("⚠️ List is empty. No supplier available.")
 }
 
 // ShowEndOfSupplier indicate the end of the displayed list
 func ShowEndOfSupplier() {
-	fmt.Println("End of supplier list reached.")
+	ShowMessage("End of supplier list reached.")
 }
 
 // DisplayCategories displays a paginated list of categories
 func DisplayCategories(suppliers []string, start, end int) {
-	fmt.Println("* Available Categories:")
+	ShowMessage("* Available Categories:")
 	for i := start; i < end && i < len(suppliers); i++ {
 		fmt.Printf("%d. %s\n", i+1, suppliers[i]) // Add 1 to i for correct numbering
 	}
@@ -466,7 +499,7 @@ func DisplayCategories(suppliers []string, start, end int) {
 
 // ShowCategoriesList shows the list of items with their index and details
 func ShowCategoriesList(Categories []string) {
-	fmt.Println("* Showing Existing Categories *")
+	ShowMessage("* Showing Existing Categories *")
 	for i, category := range Categories {
 		fmt.Printf("%d. %s\n", i+1, category)
 	}
@@ -474,12 +507,12 @@ func ShowCategoriesList(Categories []string) {
 
 // ShowNoCategoriesMessage displays a message when no category are available
 func ShowNoCategoriesMessage() {
-	fmt.Println("⚠️ List is empty. No Category available.")
+	ShowMessage("⚠️ List is empty. No Category available.")
 }
 
 // ShowEndOfCategory indicate the end of the displayed list
 func ShowEndOfCategory() {
-	fmt.Println("End of Category list reached.")
+	ShowMessage("End of Category list reached.")
 }
 
 // ErrorMessage displays an error message
@@ -497,7 +530,7 @@ func GetPageInput() string {
 
 // ShowOnlyCancelMessage displays a message indicating that only 'c' can be pressed to return to the service menu
 func ShowOnlyCancelMessage() string {
-	fmt.Println("Press [c] to continue to the service menu:")
+	ShowMessage("Press [c] to continue to the service menu:")
 	reader := bufio.NewReader(os.Stdin)
 	input, _ := reader.ReadString('\n')
 	return strings.TrimSpace(input)
