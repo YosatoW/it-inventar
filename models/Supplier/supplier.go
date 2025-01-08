@@ -49,19 +49,31 @@ func AddSupplierToFile(filePath, supplierName string) error {
 	defer func(file *os.File) {
 		err := file.Close()
 		if err != nil {
-
+			fmt.Println("Error closing file:", err)
 		}
 	}(file)
 
-	// Initialize a CSV writer to write to the file
 	writer := csv.NewWriter(file)
 	defer writer.Flush()
 
-	// Write supplier name in a new line
 	if err := writer.Write([]string{supplierName}); err != nil {
 		return err
 	}
+
 	return nil
+}
+
+// IsValidSupplierName checks if the supplier name meets the validation criteria
+func IsValidSupplierName(name string) bool {
+	if name == "" {
+		return false
+	}
+	for _, char := range name {
+		if !(char >= 'a' && char <= 'z') && !(char >= 'A' && char <= 'Z') && !(char >= '0' && char <= '9') && char != ' ' {
+			return false
+		}
+	}
+	return true
 }
 
 // DeleteSupplier from existing list
